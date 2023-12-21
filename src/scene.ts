@@ -57,7 +57,6 @@ const animation = { enabled: false, play: true };
 let isTransforming = true;
 
 const myHelpers = {
-  myBoolean: true,
   toggleTransform: function () {
     if (isTransforming) {
       transformControls.forEach((t) => {
@@ -147,14 +146,14 @@ const myHelpers = {
       .name("rotate x");*/
     cubeSubFolder
       .add(cube.rotation, "y", 0, Math.PI * 2, 0.01)
-      .name("rotate y");
+      .name("rotation");
+    cubeSubFolder.add(cube.scale, "y", 0, 2, 0.01).name("height");
     /*cubeSubFolder
       .add(cube.rotation, "z", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
       .name("rotate z");
 
     cubeSubFolder.add(animation, "enabled").name("animated");*/
   },
-  myNumber: 1,
 };
 
 init();
