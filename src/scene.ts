@@ -35,20 +35,122 @@ let scene: Scene;
 let loadingManager: LoadingManager;
 let ambientLight: AmbientLight;
 let pointLight: PointLight;
-let cube: Mesh;
-let objects: Mesh[] = [];
+let cubes: Mesh[] = [];
 let camera: PerspectiveCamera;
 let cameraControls: OrbitControls;
 let dragControls: DragControls;
-let transformControls: TransformControls;
+let transformControls: TransformControls[] = [];
 let axesHelper: AxesHelper;
 let pointLightHelper: PointLightHelper;
 let clock: Clock;
 let stats: Stats;
 let gui: GUI;
 let gridHelper: GridHelper;
+let planeGeometry: PlaneGeometry;
 
 const animation = { enabled: false, play: true };
+
+let isTransforming = true;
+
+const myHelpers = {
+  myBoolean: true,
+  toggleTransform: function () {
+    if (isTransforming) {
+      transformControls.forEach((t) => {
+        t.enabled = false;
+        t.visible = false;
+      });
+      isTransforming = false;
+    } else {
+      transformControls.forEach((t) => {
+        t.enabled = true;
+        t.visible = true;
+      });
+      isTransforming = true;
+    }
+  },
+
+  addQube: function () {
+    const sideLength = 1;
+    const cubeGeometry = new BoxGeometry(sideLength, sideLength, sideLength);
+    const cubeMaterial = new MeshStandardMaterial({
+      color: "#f69f1f",
+      metalness: 0.5,
+      roughness: 0.7,
+    });
+    const cube = new Mesh(cubeGeometry, cubeMaterial);
+    cube.castShadow = true;
+    cube.position.y = 0.5;
+
+    cube.userData.limit = {
+      min: new Vector3(
+        -(planeGeometry.parameters.width / 2),
+        cube.position.y,
+        -(planeGeometry.parameters.width / 2)
+      ),
+      max: new Vector3(
+        planeGeometry.parameters.width / 2,
+        cube.position.y,
+        planeGeometry.parameters.width / 2
+      ),
+    };
+    cube.userData.update = function () {
+      cube.position.clamp(cube.userData.limit.min, cube.userData.limit.max);
+    };
+    cubes.push(cube);
+    scene.add(cube);
+
+    const transformControl = new TransformControls(camera, renderer.domElement);
+    transformControl.enabled = true;
+    transformControl.showY = false;
+    transformControl.addEventListener("dragging-changed", function (event) {
+      cameraControls.enabled = !event.value;
+    });
+
+    transformControl.attach(cube);
+    transformControls.push(transformControl);
+    scene.add(transformControl);
+
+    const cubeOneFolder = gui.addFolder("Cube " + cube.id);
+
+    cubeOneFolder
+      .add(cube.position, "x")
+      .min(-5)
+      .max(5)
+      .step(0.5)
+      .name("pos x");
+    cubeOneFolder
+      .add(cube.position, "y")
+      .min(-5)
+      .max(5)
+      .step(0.5)
+      .name("pos y");
+    cubeOneFolder
+      .add(cube.position, "z")
+      .min(-5)
+      .max(5)
+      .step(0.5)
+      .name("pos z");
+
+    cubeOneFolder.add(cube.material, "wireframe");
+    cubeOneFolder.addColor(cube.material, "color");
+    cubeOneFolder.add(cube.material, "metalness", 0, 1, 0.1);
+    cubeOneFolder.add(cube.material, "roughness", 0, 1, 0.1);
+
+    cubeOneFolder
+      .add(cube.rotation, "x", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
+      .name("rotate x");
+    cubeOneFolder
+      .add(cube.rotation, "y", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
+      .name("rotate y");
+    cubeOneFolder
+      .add(cube.rotation, "z", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
+      .name("rotate z");
+
+    cubeOneFolder.add(animation, "enabled").name("animated");
+  },
+  myNumber: 1,
+};
 
 init();
 animate();
@@ -100,7 +202,7 @@ function init() {
 
   // ===== 📦 OBJECTS =====
   {
-    const planeGeometry = new PlaneGeometry(10, 10);
+    planeGeometry = new PlaneGeometry(10, 10);
     const planeMaterial = new MeshLambertMaterial({
       color: "gray",
       emissive: "teal",
@@ -113,36 +215,6 @@ function init() {
     plane.rotateX(Math.PI / 2);
     plane.receiveShadow = true;
     scene.add(plane);
-
-    const sideLength = 1;
-    const cubeGeometry = new BoxGeometry(sideLength, sideLength, sideLength);
-    const cubeMaterial = new MeshStandardMaterial({
-      color: "#f69f1f",
-      metalness: 0.5,
-      roughness: 0.7,
-    });
-    cube = new Mesh(cubeGeometry, cubeMaterial);
-    cube.castShadow = true;
-    cube.position.y = 0.5;
-
-    cube.userData.limit = {
-      min: new Vector3(
-        -(planeGeometry.parameters.width / 2),
-        cube.position.y,
-        -(planeGeometry.parameters.width / 2)
-      ),
-      max: new Vector3(
-        planeGeometry.parameters.width / 2,
-        cube.position.y,
-        planeGeometry.parameters.width / 2
-      ),
-    };
-    cube.userData.update = function () {
-      cube.position.clamp(cube.userData.limit.min, cube.userData.limit.max);
-    };
-    objects.push(cube);
-
-    scene.add(cube);
   }
 
   // ===== 🎥 CAMERA =====
@@ -159,12 +231,12 @@ function init() {
   // ===== 🕹️ CONTROLS =====
   {
     cameraControls = new OrbitControls(camera, canvas);
-    cameraControls.target = cube.position.clone();
+    cameraControls.target = new Vector3();
     cameraControls.enableDamping = true;
     cameraControls.autoRotate = false;
     cameraControls.update();
 
-    dragControls = new DragControls([cube], camera, renderer.domElement);
+    dragControls = new DragControls(cubes, camera, renderer.domElement);
     dragControls.addEventListener("hoveron", (event) => {
       event.object.material.emissive.set("orange");
     });
@@ -186,16 +258,6 @@ function init() {
       event.object.material.needsUpdate = true;
     });
     dragControls.enabled = false;
-
-    transformControls = new TransformControls(camera, renderer.domElement);
-    transformControls.enabled = true;
-    transformControls.showY = false;
-    transformControls.addEventListener("dragging-changed", function (event) {
-      cameraControls.enabled = !event.value;
-    });
-
-    transformControls.attach(cube);
-    scene.add(transformControls);
 
     // Full screen
     window.addEventListener("dblclick", (event) => {
@@ -232,47 +294,12 @@ function init() {
   {
     gui = new GUI({ title: "Settings", width: 300 });
 
-    const cubeOneFolder = gui.addFolder("Cube one");
-
-    cubeOneFolder
-      .add(cube.position, "x")
-      .min(-5)
-      .max(5)
-      .step(0.5)
-      .name("pos x");
-    cubeOneFolder
-      .add(cube.position, "y")
-      .min(-5)
-      .max(5)
-      .step(0.5)
-      .name("pos y");
-    cubeOneFolder
-      .add(cube.position, "z")
-      .min(-5)
-      .max(5)
-      .step(0.5)
-      .name("pos z");
-
-    cubeOneFolder.add(cube.material, "wireframe");
-    cubeOneFolder.addColor(cube.material, "color");
-    cubeOneFolder.add(cube.material, "metalness", 0, 1, 0.1);
-    cubeOneFolder.add(cube.material, "roughness", 0, 1, 0.1);
-
-    cubeOneFolder
-      .add(cube.rotation, "x", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
-      .name("rotate x");
-    cubeOneFolder
-      .add(cube.rotation, "y", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
-      .name("rotate y");
-    cubeOneFolder
-      .add(cube.rotation, "z", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
-      .name("rotate z");
-
-    cubeOneFolder.add(animation, "enabled").name("animated");
+    const qubes = gui.addFolder("Qubes");
+    qubes.add(myHelpers, "addQube").name("add qube"); // Button
 
     const controlsFolder = gui.addFolder("Controls");
     controlsFolder.add(dragControls, "enabled").name("drag controls");
-    controlsFolder.add(transformControls, "enabled").name("transform controls");
+    controlsFolder.add(myHelpers, "toggleTransform").name("toggle transform");
 
     const lightsFolder = gui.addFolder("Lights");
     lightsFolder.add(pointLight, "visible").name("point light");
@@ -312,7 +339,7 @@ function animate() {
 
   stats.update();
 
-  objects.forEach((o) => {
+  cubes.forEach((o) => {
     o.userData.update();
   });
 
