@@ -15,6 +15,7 @@ import {
   PointLight,
   PointLightHelper,
   Scene,
+  Vector3,
   WebGLRenderer,
 } from "three";
 import { DragControls } from "three/examples/jsm/controls/DragControls";
@@ -35,6 +36,7 @@ let loadingManager: LoadingManager;
 let ambientLight: AmbientLight;
 let pointLight: PointLight;
 let cube: Mesh;
+let objects: Mesh[] = [];
 let camera: PerspectiveCamera;
 let cameraControls: OrbitControls;
 let dragControls: DragControls;
@@ -44,6 +46,7 @@ let pointLightHelper: PointLightHelper;
 let clock: Clock;
 let stats: Stats;
 let gui: GUI;
+let gridHelper: GridHelper;
 
 const animation = { enabled: false, play: true };
 
@@ -97,18 +100,7 @@ function init() {
 
   // ===== 📦 OBJECTS =====
   {
-    const sideLength = 1;
-    const cubeGeometry = new BoxGeometry(sideLength, sideLength, sideLength);
-    const cubeMaterial = new MeshStandardMaterial({
-      color: "#f69f1f",
-      metalness: 0.5,
-      roughness: 0.7,
-    });
-    cube = new Mesh(cubeGeometry, cubeMaterial);
-    cube.castShadow = true;
-    cube.position.y = 0.5;
-
-    const planeGeometry = new PlaneGeometry(3, 3);
+    const planeGeometry = new PlaneGeometry(10, 10);
     const planeMaterial = new MeshLambertMaterial({
       color: "gray",
       emissive: "teal",
@@ -120,9 +112,37 @@ function init() {
     const plane = new Mesh(planeGeometry, planeMaterial);
     plane.rotateX(Math.PI / 2);
     plane.receiveShadow = true;
+    scene.add(plane);
+
+    const sideLength = 1;
+    const cubeGeometry = new BoxGeometry(sideLength, sideLength, sideLength);
+    const cubeMaterial = new MeshStandardMaterial({
+      color: "#f69f1f",
+      metalness: 0.5,
+      roughness: 0.7,
+    });
+    cube = new Mesh(cubeGeometry, cubeMaterial);
+    cube.castShadow = true;
+    cube.position.y = 0.5;
+
+    cube.userData.limit = {
+      min: new Vector3(
+        -(planeGeometry.parameters.width / 2),
+        cube.position.y,
+        -(planeGeometry.parameters.width / 2)
+      ),
+      max: new Vector3(
+        planeGeometry.parameters.width / 2,
+        cube.position.y,
+        planeGeometry.parameters.width / 2
+      ),
+    };
+    cube.userData.update = function () {
+      cube.position.clamp(cube.userData.limit.min, cube.userData.limit.max);
+    };
+    objects.push(cube);
 
     scene.add(cube);
-    scene.add(plane);
   }
 
   // ===== 🎥 CAMERA =====
@@ -169,6 +189,7 @@ function init() {
 
     transformControls = new TransformControls(camera, renderer.domElement);
     transformControls.enabled = true;
+    transformControls.showY = false;
     transformControls.addEventListener("dragging-changed", function (event) {
       cameraControls.enabled = !event.value;
     });
@@ -194,8 +215,9 @@ function init() {
     pointLightHelper.visible = false;
     scene.add(pointLightHelper);
 
-    const gridHelper = new GridHelper(20, 20, "teal", "darkgray");
+    gridHelper = new GridHelper(20, 20, "teal", "darkgray");
     gridHelper.position.y = -0.01;
+    gridHelper.visible = true;
     scene.add(gridHelper);
   }
 
@@ -257,6 +279,7 @@ function init() {
     lightsFolder.add(ambientLight, "visible").name("ambient light");
 
     const helpersFolder = gui.addFolder("Helpers");
+    helpersFolder.add(gridHelper, "visible").name("grid");
     helpersFolder.add(axesHelper, "visible").name("axes");
     helpersFolder.add(pointLightHelper, "visible").name("pointLight");
 
@@ -288,6 +311,10 @@ function animate() {
   requestAnimationFrame(animate);
 
   stats.update();
+
+  objects.forEach((o) => {
+    o.userData.update();
+  });
 
   if (animation.enabled && animation.play) {
     animations.rotate(cube, clock, Math.PI / 3);
