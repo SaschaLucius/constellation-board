@@ -29,6 +29,9 @@ import { TransformControls } from "three/examples/jsm/controls/TransformControls
 
 const CANVAS_ID = "scene";
 
+let delta = 1 / 30;
+let interval = 1 / 30;
+
 let canvas: HTMLElement;
 let renderer: WebGLRenderer;
 let scene: Scene;
@@ -337,24 +340,32 @@ function init() {
 function animate() {
   requestAnimationFrame(animate);
 
-  stats.update();
+  delta += clock.getDelta();
 
-  cubes.forEach((o) => {
-    o.userData.update();
-  });
+  if (delta > interval) {
+    // The draw or time dependent code are here
 
-  if (animation.enabled && animation.play) {
-    animations.rotate(cube, clock, Math.PI / 3);
-    animations.bounce(cube, clock, 1, 0.5, 0.5);
+    stats.update();
+
+    cubes.forEach((o) => {
+      o.userData.update();
+    });
+
+    /*if (animation.enabled && animation.play) {
+      animations.rotate(cube, clock, Math.PI / 3);
+      animations.bounce(cube, clock, 1, 0.5, 0.5);
+    }*/
+
+    if (resizeRendererToDisplaySize(renderer)) {
+      const canvas = renderer.domElement;
+      camera.aspect = canvas.clientWidth / canvas.clientHeight;
+      camera.updateProjectionMatrix();
+    }
+
+    cameraControls.update();
+
+    renderer.render(scene, camera);
+
+    delta = delta % interval;
   }
-
-  if (resizeRendererToDisplaySize(renderer)) {
-    const canvas = renderer.domElement;
-    camera.aspect = canvas.clientWidth / canvas.clientHeight;
-    camera.updateProjectionMatrix();
-  }
-
-  cameraControls.update();
-
-  renderer.render(scene, camera);
 }
