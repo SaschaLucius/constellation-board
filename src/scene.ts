@@ -349,6 +349,9 @@ function animate() {
     stats.update();
 
     cubes.forEach((o) => {
+      o.userData.limit.min.y = o.scale.y / 2;
+      o.userData.limit.max.y = o.scale.y / 2;
+      o.position.y = o.scale.y / 2;
       o.userData.update();
     });
 
