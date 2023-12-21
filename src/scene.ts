@@ -50,6 +50,7 @@ let stats: Stats;
 let gui: GUI;
 let gridHelper: GridHelper;
 let planeGeometry: PlaneGeometry;
+let qubesFolder: any;
 
 const animation = { enabled: false, play: true };
 
@@ -114,43 +115,43 @@ const myHelpers = {
     transformControls.push(transformControl);
     scene.add(transformControl);
 
-    const cubeOneFolder = gui.addFolder("Cube " + cube.id);
+    const cubeSubFolder = qubesFolder.addFolder("Cube " + cube.id);
 
-    cubeOneFolder
+    /*cubeSubFolder
       .add(cube.position, "x")
       .min(-5)
       .max(5)
       .step(0.5)
       .name("pos x");
-    cubeOneFolder
+    cubeSubFolder
       .add(cube.position, "y")
       .min(-5)
       .max(5)
       .step(0.5)
       .name("pos y");
-    cubeOneFolder
+    cubeSubFolder
       .add(cube.position, "z")
       .min(-5)
       .max(5)
       .step(0.5)
-      .name("pos z");
+      .name("pos z");*/
 
-    cubeOneFolder.add(cube.material, "wireframe");
-    cubeOneFolder.addColor(cube.material, "color");
-    cubeOneFolder.add(cube.material, "metalness", 0, 1, 0.1);
-    cubeOneFolder.add(cube.material, "roughness", 0, 1, 0.1);
+    /*cubeSubFolder.add(cube.material, "wireframe");*/
+    cubeSubFolder.addColor(cube.material, "color");
+    /*cubeSubFolder.add(cube.material, "metalness", 0, 1, 0.1);
+    cubeSubFolder.add(cube.material, "roughness", 0, 1, 0.1);*/
 
-    cubeOneFolder
+    /*cubeSubFolder
       .add(cube.rotation, "x", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
-      .name("rotate x");
-    cubeOneFolder
-      .add(cube.rotation, "y", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
+      .name("rotate x");*/
+    cubeSubFolder
+      .add(cube.rotation, "y", 0, Math.PI * 2, 0.01)
       .name("rotate y");
-    cubeOneFolder
+    /*cubeSubFolder
       .add(cube.rotation, "z", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
       .name("rotate z");
 
-    cubeOneFolder.add(animation, "enabled").name("animated");
+    cubeSubFolder.add(animation, "enabled").name("animated");*/
   },
   myNumber: 1,
 };
@@ -297,8 +298,8 @@ function init() {
   {
     gui = new GUI({ title: "Settings", width: 300 });
 
-    const qubes = gui.addFolder("Qubes");
-    qubes.add(myHelpers, "addQube").name("add qube"); // Button
+    qubesFolder = gui.addFolder("Qubes");
+    qubesFolder.add(myHelpers, "addQube").name("add qube"); // Button
 
     const controlsFolder = gui.addFolder("Controls");
     controlsFolder.add(dragControls, "enabled").name("drag controls");
