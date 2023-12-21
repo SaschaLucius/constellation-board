@@ -154,6 +154,12 @@ const myHelpers = {
 
     cubeSubFolder.add(animation, "enabled").name("animated");*/
   },
+
+  topCamera: function () {
+    camera.position.set(0, 11, 0);
+    cameraControls.target = new Vector3();
+    cameraControls.update();
+  },
 };
 
 init();
@@ -316,6 +322,7 @@ function init() {
 
     const cameraFolder = gui.addFolder("Camera");
     cameraFolder.add(cameraControls, "autoRotate");
+    cameraFolder.add(myHelpers, "topCamera").name("top down camera");
 
     // persist GUI state in local storage on changes
     gui.onFinishChange(() => {
