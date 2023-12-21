@@ -105,13 +105,14 @@ const myHelpers = {
     scene.add(cube);
 
     const transformControl = new TransformControls(camera, renderer.domElement);
-    transformControl.enabled = true;
     transformControl.showY = false;
     transformControl.addEventListener("dragging-changed", function (event) {
       cameraControls.enabled = !event.value;
     });
 
     transformControl.attach(cube);
+    transformControl.enabled = isTransforming;
+    transformControl.visible = isTransforming;
     transformControls.push(transformControl);
     scene.add(transformControl);
 
