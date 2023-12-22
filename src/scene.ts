@@ -5,6 +5,7 @@ import {
   BoxGeometry,
   Clock,
   GridHelper,
+  Group,
   LoadingManager,
   Mesh,
   MeshLambertMaterial,
@@ -14,6 +15,7 @@ import {
   PlaneGeometry,
   PointLight,
   PointLightHelper,
+  Raycaster,
   Scene,
   Vector3,
   WebGLRenderer,
@@ -39,7 +41,8 @@ let loadingManager: LoadingManager;
 let ambientLight: AmbientLight;
 let pointLight: PointLight;
 let cubes: Mesh[] = [];
-let camera: PerspectiveCamera;
+let globalCamera: PerspectiveCamera;
+let activeCamera: PerspectiveCamera;
 let cameraControls: OrbitControls;
 let dragControls: DragControls;
 let transformControls: TransformControls[] = [];
@@ -50,6 +53,7 @@ let stats: Stats;
 let gui: GUI;
 let gridHelper: GridHelper;
 let planeGeometry: PlaneGeometry;
+let plane: Mesh;
 let qubesFolder: any;
 
 const animation = { enabled: false, play: true };
@@ -74,6 +78,8 @@ const myHelpers = {
   },
 
   addQube: function () {
+    var playerGroup = new Group();
+
     const sideLength = 1;
     const cubeGeometry = new BoxGeometry(sideLength, sideLength, sideLength);
     const cubeMaterial = new MeshStandardMaterial({
@@ -82,28 +88,43 @@ const myHelpers = {
       roughness: 0.7,
     });
     const cube = new Mesh(cubeGeometry, cubeMaterial);
+    playerGroup.name = "Group " + cube.id;
     cube.castShadow = true;
     cube.position.y = 0.5;
+
+    let newCamera = new PerspectiveCamera(
+      70,
+      window.innerWidth / window.innerHeight,
+      0.01,
+      10
+    );
+    newCamera.position.y = 0.75;
+
+    playerGroup.add(newCamera);
+    playerGroup.add(cube);
 
     cube.userData.limit = {
       min: new Vector3(
         -(planeGeometry.parameters.width / 2),
         cube.position.y,
-        -(planeGeometry.parameters.width / 2)
+        -(planeGeometry.parameters.height / 2)
       ),
       max: new Vector3(
         planeGeometry.parameters.width / 2,
         cube.position.y,
-        planeGeometry.parameters.width / 2
+        planeGeometry.parameters.height / 2
       ),
     };
     cube.userData.update = function () {
       cube.position.clamp(cube.userData.limit.min, cube.userData.limit.max);
     };
     cubes.push(cube);
-    scene.add(cube);
+    scene.add(playerGroup);
 
-    const transformControl = new TransformControls(camera, renderer.domElement);
+    const transformControl = new TransformControls(
+      globalCamera,
+      renderer.domElement
+    );
     transformControl.showY = false;
     transformControl.addEventListener("dragging-changed", function (event) {
       cameraControls.enabled = !event.value;
@@ -145,9 +166,9 @@ const myHelpers = {
       .add(cube.rotation, "x", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
       .name("rotate x");*/
     cubeSubFolder
-      .add(cube.rotation, "y", 0, Math.PI * 2, 0.01)
+      .add(playerGroup.rotation, "y", 0, Math.PI * 2, 0.01)
       .name("rotation");
-    cubeSubFolder.add(cube.scale, "y", 0, 2, 0.01).name("height");
+    cubeSubFolder.add(playerGroup.scale, "y", 0, 2, 0.01).name("height");
     /*cubeSubFolder
       .add(cube.rotation, "z", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
       .name("rotate z");
@@ -156,11 +177,30 @@ const myHelpers = {
   },
 
   topCamera: function () {
-    camera.position.set(0, 11, 0);
+    activeCamera = globalCamera;
+    globalCamera.position.set(0, 11, 0);
     cameraControls.target = new Vector3();
     cameraControls.update();
   },
 };
+
+function ondblclick(event: any) {
+  let x = (event.clientX / window.innerWidth) * 2 - 1;
+  let y = -(event.clientY / window.innerHeight) * 2 + 1;
+  let dir = new Vector3(x, y, -1);
+  dir.unproject(globalCamera);
+
+  let ray = new Raycaster(
+    globalCamera.position,
+    dir.sub(globalCamera.position).normalize()
+  );
+  var intersects = ray.intersectObjects(cubes);
+  if (intersects.length > 0) {
+    const group = intersects[0].object.parent as Group;
+    const objectCamera = group.children[0] as PerspectiveCamera;
+    activeCamera = objectCamera;
+  }
+}
 
 init();
 animate();
@@ -212,41 +252,41 @@ function init() {
 
   // ===== 📦 OBJECTS =====
   {
-    planeGeometry = new PlaneGeometry(10, 10);
+    planeGeometry = new PlaneGeometry(1, 1);
     const planeMaterial = new MeshLambertMaterial({
       color: "gray",
       emissive: "teal",
       emissiveIntensity: 0.2,
       side: 2,
-      transparent: true,
-      opacity: 0.4,
     });
-    const plane = new Mesh(planeGeometry, planeMaterial);
+    plane = new Mesh(planeGeometry, planeMaterial);
     plane.rotateX(Math.PI / 2);
     plane.receiveShadow = true;
+    plane.scale.set(10, 10, 0);
     scene.add(plane);
   }
 
   // ===== 🎥 CAMERA =====
   {
-    camera = new PerspectiveCamera(
+    globalCamera = new PerspectiveCamera(
       50,
       canvas.clientWidth / canvas.clientHeight,
       0.1,
       100
     );
-    camera.position.set(2, 2, 5);
+    globalCamera.position.set(2, 2, 5);
+    activeCamera = globalCamera;
   }
 
   // ===== 🕹️ CONTROLS =====
   {
-    cameraControls = new OrbitControls(camera, canvas);
+    cameraControls = new OrbitControls(globalCamera, canvas);
     cameraControls.target = new Vector3();
     cameraControls.enableDamping = true;
     cameraControls.autoRotate = false;
     cameraControls.update();
 
-    dragControls = new DragControls(cubes, camera, renderer.domElement);
+    dragControls = new DragControls(cubes, globalCamera, renderer.domElement);
     dragControls.addEventListener("hoveron", (event) => {
       event.object.material.emissive.set("orange");
     });
@@ -270,11 +310,21 @@ function init() {
     dragControls.enabled = false;
 
     // Full screen
-    window.addEventListener("dblclick", (event) => {
+    /*window.addEventListener("dblclick", (event) => {
       if (event.target === canvas) {
         toggleFullScreen(canvas);
       }
-    });
+    });*/
+
+    window.addEventListener("dblclick", ondblclick, false);
+
+    window.addEventListener("keydown", onDocumentKeyDown, false);
+    function onDocumentKeyDown(event: any) {
+      var keyCode = event.which;
+      if (keyCode == 27) {
+        activeCamera = globalCamera;
+      }
+    }
   }
 
   // ===== 🪄 HELPERS =====
@@ -306,6 +356,10 @@ function init() {
 
     qubesFolder = gui.addFolder("Qubes");
     qubesFolder.add(myHelpers, "addQube").name("add qube"); // Button
+
+    const planeFolder = gui.addFolder("Plane");
+    planeFolder.add(plane.scale, "x").name("width");
+    planeFolder.add(plane.scale, "y").name("height");
 
     const controlsFolder = gui.addFolder("Controls");
     controlsFolder.add(dragControls, "enabled").name("drag controls");
@@ -355,11 +409,20 @@ function animate() {
 
     stats.update();
 
-    cubes.forEach((o) => {
-      o.userData.limit.min.y = o.scale.y / 2;
-      o.userData.limit.max.y = o.scale.y / 2;
-      o.position.y = o.scale.y / 2;
-      o.userData.update();
+    cubes.forEach((cube) => {
+      cube.userData.limit = {
+        min: new Vector3(
+          -(plane.scale.x / 2),
+          cube.scale.y / 2,
+          -(plane.scale.y / 2)
+        ),
+        max: new Vector3(
+          plane.scale.x / 2,
+          cube.scale.y / 2,
+          plane.scale.y / 2
+        ),
+      };
+      cube.userData.update();
     });
 
     /*if (animation.enabled && animation.play) {
@@ -369,13 +432,13 @@ function animate() {
 
     if (resizeRendererToDisplaySize(renderer)) {
       const canvas = renderer.domElement;
-      camera.aspect = canvas.clientWidth / canvas.clientHeight;
-      camera.updateProjectionMatrix();
+      activeCamera.aspect = canvas.clientWidth / canvas.clientHeight;
+      activeCamera.updateProjectionMatrix();
     }
 
     cameraControls.update();
 
-    renderer.render(scene, camera);
+    renderer.render(scene, activeCamera);
 
     delta = delta % interval;
   }
