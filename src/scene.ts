@@ -10,6 +10,7 @@ import {
   Mesh,
   MeshLambertMaterial,
   MeshStandardMaterial,
+  Object3D,
   PCFSoftShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
@@ -40,7 +41,7 @@ let scene: Scene;
 let loadingManager: LoadingManager;
 let ambientLight: AmbientLight;
 let pointLight: PointLight;
-let cubes: Mesh[] = [];
+let players: Object3D[] = [];
 let globalCamera: PerspectiveCamera;
 let activeCamera: PerspectiveCamera;
 let cameraControls: OrbitControls;
@@ -103,22 +104,25 @@ const myHelpers = {
     playerGroup.add(newCamera);
     playerGroup.add(cube);
 
-    cube.userData.limit = {
+    playerGroup.userData.limit = {
       min: new Vector3(
         -(planeGeometry.parameters.width / 2),
-        cube.position.y,
+        0,
         -(planeGeometry.parameters.height / 2)
       ),
       max: new Vector3(
         planeGeometry.parameters.width / 2,
-        cube.position.y,
+        0,
         planeGeometry.parameters.height / 2
       ),
     };
-    cube.userData.update = function () {
-      cube.position.clamp(cube.userData.limit.min, cube.userData.limit.max);
+    playerGroup.userData.update = function () {
+      playerGroup.position.clamp(
+        playerGroup.userData.limit.min,
+        playerGroup.userData.limit.max
+      );
     };
-    cubes.push(cube);
+    players.push(playerGroup);
     scene.add(playerGroup);
 
     const transformControl = new TransformControls(
@@ -130,50 +134,50 @@ const myHelpers = {
       cameraControls.enabled = !event.value;
     });
 
-    transformControl.attach(cube);
+    transformControl.attach(playerGroup);
     transformControl.enabled = isTransforming;
     transformControl.visible = isTransforming;
     transformControls.push(transformControl);
     scene.add(transformControl);
 
-    const cubeSubFolder = qubesFolder.addFolder("Cube " + cube.id);
+    const playerSubFolder = qubesFolder.addFolder("Player " + cube.id);
 
-    /*cubeSubFolder
+    /*playerSubFolder
       .add(cube.position, "x")
       .min(-5)
       .max(5)
       .step(0.5)
       .name("pos x");
-    cubeSubFolder
+    playerSubFolder
       .add(cube.position, "y")
       .min(-5)
       .max(5)
       .step(0.5)
       .name("pos y");
-    cubeSubFolder
+    playerSubFolder
       .add(cube.position, "z")
       .min(-5)
       .max(5)
       .step(0.5)
       .name("pos z");*/
 
-    /*cubeSubFolder.add(cube.material, "wireframe");*/
-    cubeSubFolder.addColor(cube.material, "color");
-    /*cubeSubFolder.add(cube.material, "metalness", 0, 1, 0.1);
-    cubeSubFolder.add(cube.material, "roughness", 0, 1, 0.1);*/
+    /*playerSubFolder.add(cube.material, "wireframe");*/
+    playerSubFolder.addColor(cube.material, "color");
+    /*playerSubFolder.add(cube.material, "metalness", 0, 1, 0.1);
+    playerSubFolder.add(cube.material, "roughness", 0, 1, 0.1);*/
 
-    /*cubeSubFolder
+    /*playerSubFolder
       .add(cube.rotation, "x", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
       .name("rotate x");*/
-    cubeSubFolder
+    playerSubFolder
       .add(playerGroup.rotation, "y", 0, Math.PI * 2, 0.01)
       .name("rotation");
-    cubeSubFolder.add(playerGroup.scale, "y", 0, 2, 0.01).name("height");
-    /*cubeSubFolder
+    playerSubFolder.add(playerGroup.scale, "y", 0, 2, 0.01).name("height");
+    /*playerSubFolder
       .add(cube.rotation, "z", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
       .name("rotate z");
 
-    cubeSubFolder.add(animation, "enabled").name("animated");*/
+    playerSubFolder.add(animation, "enabled").name("animated");*/
   },
 
   topCamera: function () {
@@ -194,7 +198,7 @@ function ondblclick(event: any) {
     globalCamera.position,
     dir.sub(globalCamera.position).normalize()
   );
-  var intersects = ray.intersectObjects(cubes);
+  var intersects = ray.intersectObjects(players);
   if (intersects.length > 0) {
     const group = intersects[0].object.parent as Group;
     const objectCamera = group.children[0] as PerspectiveCamera;
@@ -286,26 +290,32 @@ function init() {
     cameraControls.autoRotate = false;
     cameraControls.update();
 
-    dragControls = new DragControls(cubes, globalCamera, renderer.domElement);
+    dragControls = new DragControls(players, globalCamera, renderer.domElement);
+    dragControls.transformGroup = true;
     dragControls.addEventListener("hoveron", (event) => {
-      event.object.material.emissive.set("orange");
+      console.log(event.object);
+      const mesh = event.object;
+      mesh.material.emissive.set("orange");
     });
     dragControls.addEventListener("hoveroff", (event) => {
-      event.object.material.emissive.set("black");
+      const mesh = event.object;
+      mesh.material.emissive.set("black");
     });
     dragControls.addEventListener("dragstart", (event) => {
       cameraControls.enabled = false;
       animation.play = false;
-      event.object.material.emissive.set("black");
-      event.object.material.opacity = 0.7;
-      event.object.material.needsUpdate = true;
+      const mesh = event.object.children[1];
+      mesh.material.emissive.set("black");
+      mesh.material.opacity = 0.7;
+      mesh.material.needsUpdate = true;
     });
     dragControls.addEventListener("dragend", (event) => {
       cameraControls.enabled = true;
       animation.play = true;
-      event.object.material.emissive.set("black");
-      event.object.material.opacity = 1;
-      event.object.material.needsUpdate = true;
+      const mesh = event.object.children[1];
+      mesh.material.emissive.set("black");
+      mesh.material.opacity = 1;
+      mesh.material.needsUpdate = true;
     });
     dragControls.enabled = false;
 
@@ -409,20 +419,12 @@ function animate() {
 
     stats.update();
 
-    cubes.forEach((cube) => {
-      cube.userData.limit = {
-        min: new Vector3(
-          -(plane.scale.x / 2),
-          cube.scale.y / 2,
-          -(plane.scale.y / 2)
-        ),
-        max: new Vector3(
-          plane.scale.x / 2,
-          cube.scale.y / 2,
-          plane.scale.y / 2
-        ),
+    players.forEach((player) => {
+      player.userData.limit = {
+        min: new Vector3(-(plane.scale.x / 2), 0, -(plane.scale.y / 2)),
+        max: new Vector3(plane.scale.x / 2, 0, plane.scale.y / 2),
       };
-      cube.userData.update();
+      player.userData.update();
     });
 
     /*if (animation.enabled && animation.play) {
