@@ -23,6 +23,10 @@ import {
 } from "three";
 import { DragControls } from "three/examples/jsm/controls/DragControls";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import {
+  CSS2DRenderer,
+  CSS2DObject,
+} from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import Stats from "three/examples/jsm/libs/stats.module";
 import * as animations from "./helpers/animations";
 import { toggleFullScreen } from "./helpers/fullscreen";
@@ -37,6 +41,7 @@ let interval = 1 / 30;
 
 let canvas: HTMLElement;
 let renderer: WebGLRenderer;
+let labelRenderer: CSS2DRenderer;
 let scene: Scene;
 let loadingManager: LoadingManager;
 let ambientLight: AmbientLight;
@@ -101,6 +106,17 @@ const myHelpers = {
     );
     newCamera.position.y = 0.75;
 
+    const labelDiv = document.createElement("div");
+    labelDiv.className = "label";
+    labelDiv.textContent = playerGroup.name;
+    labelDiv.style.backgroundColor = "transparent";
+
+    const playerName = new CSS2DObject(labelDiv);
+    playerName.position.set(0, 0, 0);
+    playerName.center.set(0, 1);
+    cube.add(playerName);
+    playerName.layers.set(0);
+
     playerGroup.add(newCamera);
     playerGroup.add(cube);
 
@@ -122,12 +138,13 @@ const myHelpers = {
         playerGroup.userData.limit.max
       );
     };
+
     players.push(playerGroup);
     scene.add(playerGroup);
 
     const transformControl = new TransformControls(
       globalCamera,
-      renderer.domElement
+      labelRenderer.domElement
     );
     transformControl.showY = false;
     transformControl.addEventListener("dragging-changed", function (event) {
@@ -173,6 +190,7 @@ const myHelpers = {
       .add(playerGroup.rotation, "y", 0, Math.PI * 2, 0.01)
       .name("rotation");
     playerSubFolder.add(playerGroup.scale, "y", 0, 2, 0.01).name("height");
+    playerSubFolder.add(labelDiv, "textContent").name("name");
     /*playerSubFolder
       .add(cube.rotation, "z", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
       .name("rotate z");
@@ -213,10 +231,19 @@ function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
   {
     canvas = document.querySelector(`canvas#${CANVAS_ID}`)!;
+
     renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    labelRenderer.domElement.style.position = "absolute";
+    labelRenderer.domElement.style.top = "0px";
+    document.body.appendChild(labelRenderer.domElement);
+
     scene = new Scene();
   }
 
@@ -279,21 +306,25 @@ function init() {
       100
     );
     globalCamera.position.set(2, 2, 5);
+    globalCamera.layers.enableAll();
     activeCamera = globalCamera;
   }
 
   // ===== 🕹️ CONTROLS =====
   {
-    cameraControls = new OrbitControls(globalCamera, canvas);
+    cameraControls = new OrbitControls(globalCamera, labelRenderer.domElement);
     cameraControls.target = new Vector3();
     cameraControls.enableDamping = true;
     cameraControls.autoRotate = false;
     cameraControls.update();
 
-    dragControls = new DragControls(players, globalCamera, renderer.domElement);
+    dragControls = new DragControls(
+      players,
+      globalCamera,
+      labelRenderer.domElement
+    );
     dragControls.transformGroup = true;
     dragControls.addEventListener("hoveron", (event) => {
-      console.log(event.object);
       const mesh = event.object;
       mesh.material.emissive.set("orange");
     });
@@ -436,10 +467,13 @@ function animate() {
       const canvas = renderer.domElement;
       activeCamera.aspect = canvas.clientWidth / canvas.clientHeight;
       activeCamera.updateProjectionMatrix();
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      labelRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
     }
 
     cameraControls.update();
 
+    labelRenderer.render(scene, globalCamera);
     renderer.render(scene, activeCamera);
 
     delta = delta % interval;
