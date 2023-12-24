@@ -67,6 +67,9 @@ const animation = { enabled: false, play: true };
 let isTransforming = true;
 
 const myHelpers = {
+  toggleNames: function () {
+    activeCamera.layers.toggle(1);
+  },
   toggleTransform: function () {
     if (isTransforming) {
       transformControls.forEach((t) => {
@@ -105,6 +108,7 @@ const myHelpers = {
       10
     );
     newCamera.position.y = 0.75;
+    newCamera.layers.enableAll();
 
     const labelDiv = document.createElement("div");
     labelDiv.className = "label";
@@ -115,7 +119,7 @@ const myHelpers = {
     playerName.position.set(0, 0, 0);
     playerName.center.set(0, 1);
     cube.add(playerName);
-    playerName.layers.set(0);
+    playerName.layers.set(1);
 
     playerGroup.add(newCamera);
     playerGroup.add(cube);
@@ -146,14 +150,26 @@ const myHelpers = {
       globalCamera,
       labelRenderer.domElement
     );
-    transformControl.showY = false;
     transformControl.addEventListener("dragging-changed", function (event) {
       cameraControls.enabled = !event.value;
     });
 
     transformControl.attach(playerGroup);
+    transformControl.showY = false;
     transformControl.enabled = isTransforming;
     transformControl.visible = isTransforming;
+
+    const gizmo = transformControl._gizmo.gizmo;
+
+    gizmo.translate.children
+      .filter((obj: Object3D) =>
+        ["X", "Y", "Z", "XYZ", "XY", "YZ"].includes(obj.name)
+      )
+      .forEach((obj: any) => {
+        obj.visible = false;
+        obj.layers.disable(0);
+      });
+
     transformControls.push(transformControl);
     scene.add(transformControl);
 
@@ -221,6 +237,7 @@ function ondblclick(event: any) {
     const group = intersects[0].object.parent as Group;
     const objectCamera = group.children[0] as PerspectiveCamera;
     activeCamera = objectCamera;
+    globalCamera.layers.disable(1);
   }
 }
 
@@ -393,18 +410,26 @@ function init() {
 
   // ==== 🐞 DEBUG GUI ====
   {
-    gui = new GUI({ title: "Settings", width: 300 });
+    gui = new GUI({ title: "Menue", width: 300 });
 
-    qubesFolder = gui.addFolder("Qubes");
-    qubesFolder.add(myHelpers, "addQube").name("add qube"); // Button
+    qubesFolder = gui.addFolder("Positions");
+    qubesFolder.add(myHelpers, "toggleNames").name("Toggle Names");
+    qubesFolder.add(myHelpers, "addQube").name("Add Position");
+
+    const cameraFolder = gui.addFolder("Camera");
+
+    cameraFolder.add(cameraControls, "autoRotate").name("Rotate");
+    cameraFolder.add(myHelpers, "topCamera").name("Top Down");
 
     const planeFolder = gui.addFolder("Plane");
-    planeFolder.add(plane.scale, "x").name("width");
-    planeFolder.add(plane.scale, "y").name("height");
+    planeFolder.add(plane.scale, "x").name("Width");
+    planeFolder.add(plane.scale, "y").name("Height");
 
     const controlsFolder = gui.addFolder("Controls");
-    controlsFolder.add(dragControls, "enabled").name("drag controls");
-    controlsFolder.add(myHelpers, "toggleTransform").name("toggle transform");
+    controlsFolder.add(dragControls, "enabled").name("Drag");
+    controlsFolder
+      .add(myHelpers, "toggleTransform")
+      .name("Toggle Transformation");
 
     const lightsFolder = gui.addFolder("Lights");
     lightsFolder.add(pointLight, "visible").name("point light");
@@ -414,10 +439,6 @@ function init() {
     helpersFolder.add(gridHelper, "visible").name("grid");
     helpersFolder.add(axesHelper, "visible").name("axes");
     helpersFolder.add(pointLightHelper, "visible").name("pointLight");
-
-    const cameraFolder = gui.addFolder("Camera");
-    cameraFolder.add(cameraControls, "autoRotate");
-    cameraFolder.add(myHelpers, "topCamera").name("top down camera");
 
     // persist GUI state in local storage on changes
     gui.onFinishChange(() => {
