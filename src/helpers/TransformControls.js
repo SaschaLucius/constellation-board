@@ -891,155 +891,34 @@ class TransformControlsGizmo extends Object3D {
     };
 
     const gizmoScale = {
-      X: [
-        [
-          new Mesh(scaleHandleGeometry, matRed),
-          [0.5, 0, 0],
-          [0, 0, -Math.PI / 2],
-        ],
-        [new Mesh(lineGeometry2, matRed), [0, 0, 0], [0, 0, -Math.PI / 2]],
-        [
-          new Mesh(scaleHandleGeometry, matRed),
-          [-0.5, 0, 0],
-          [0, 0, Math.PI / 2],
-        ],
-      ],
-      Y: [
-        [new Mesh(scaleHandleGeometry, matGreen), [0, 0.5, 0]],
-        [new Mesh(lineGeometry2, matGreen)],
-        [
-          new Mesh(scaleHandleGeometry, matGreen),
-          [0, -0.5, 0],
-          [0, 0, Math.PI],
-        ],
-      ],
-      Z: [
-        [
-          new Mesh(scaleHandleGeometry, matBlue),
-          [0, 0, 0.5],
-          [Math.PI / 2, 0, 0],
-        ],
-        [new Mesh(lineGeometry2, matBlue), [0, 0, 0], [Math.PI / 2, 0, 0]],
-        [
-          new Mesh(scaleHandleGeometry, matBlue),
-          [0, 0, -0.5],
-          [-Math.PI / 2, 0, 0],
-        ],
-      ],
-      XY: [
-        [
-          new Mesh(new BoxGeometry(0.15, 0.15, 0.01), matBlueTransparent),
-          [0.15, 0.15, 0],
-        ],
-      ],
-      YZ: [
-        [
-          new Mesh(new BoxGeometry(0.15, 0.15, 0.01), matRedTransparent),
-          [0, 0.15, 0.15],
-          [0, Math.PI / 2, 0],
-        ],
-      ],
-      XZ: [
-        [
-          new Mesh(new BoxGeometry(0.15, 0.15, 0.01), matGreenTransparent),
-          [0.15, 0, 0.15],
-          [-Math.PI / 2, 0, 0],
-        ],
-      ],
-      XYZ: [
-        [new Mesh(new BoxGeometry(0.1, 0.1, 0.1), matWhiteTransparent.clone())],
-      ],
+      X: [],
+      Y: [[new Mesh(scaleHandleGeometry, matGreen), [0, 0.5, 0]]],
+      Z: [],
+      XY: [],
+      YZ: [],
+      XZ: [],
+      XYZ: [],
     };
 
     const pickerScale = {
-      X: [
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [0.3, 0, 0],
-          [0, 0, -Math.PI / 2],
-        ],
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [-0.3, 0, 0],
-          [0, 0, Math.PI / 2],
-        ],
-      ],
+      X: [],
       Y: [
         [
           new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
           [0, 0.3, 0],
         ],
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [0, -0.3, 0],
-          [0, 0, Math.PI],
-        ],
       ],
-      Z: [
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [0, 0, 0.3],
-          [Math.PI / 2, 0, 0],
-        ],
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [0, 0, -0.3],
-          [-Math.PI / 2, 0, 0],
-        ],
-      ],
-      XY: [
-        [
-          new Mesh(new BoxGeometry(0.2, 0.2, 0.01), matInvisible),
-          [0.15, 0.15, 0],
-        ],
-      ],
-      YZ: [
-        [
-          new Mesh(new BoxGeometry(0.2, 0.2, 0.01), matInvisible),
-          [0, 0.15, 0.15],
-          [0, Math.PI / 2, 0],
-        ],
-      ],
-      XZ: [
-        [
-          new Mesh(new BoxGeometry(0.2, 0.2, 0.01), matInvisible),
-          [0.15, 0, 0.15],
-          [-Math.PI / 2, 0, 0],
-        ],
-      ],
-      XYZ: [
-        [new Mesh(new BoxGeometry(0.2, 0.2, 0.2), matInvisible), [0, 0, 0]],
-      ],
+      Z: [],
+      XY: [],
+      YZ: [],
+      XZ: [],
+      XYZ: [],
     };
 
     const helperScale = {
-      X: [
-        [
-          new Line(lineGeometry, matHelper.clone()),
-          [-1e3, 0, 0],
-          null,
-          [1e6, 1, 1],
-          "helper",
-        ],
-      ],
-      Y: [
-        [
-          new Line(lineGeometry, matHelper.clone()),
-          [0, -1e3, 0],
-          [0, 0, Math.PI / 2],
-          [1e6, 1, 1],
-          "helper",
-        ],
-      ],
-      Z: [
-        [
-          new Line(lineGeometry, matHelper.clone()),
-          [0, 0, -1e3],
-          [0, -Math.PI / 2, 0],
-          [1e6, 1, 1],
-          "helper",
-        ],
-      ],
+      X: [],
+      Y: [],
+      Z: [],
     };
 
     // Creates an Object3D with gizmos described in custom hierarchy definition.
