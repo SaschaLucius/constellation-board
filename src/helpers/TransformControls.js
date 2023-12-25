@@ -815,46 +815,12 @@ class TransformControlsGizmo extends Object3D {
     // Gizmo definitions - custom hierarchy definitions for setupGizmo() function
 
     const gizmoTranslate = {
-      X: [
-        [new Mesh(arrowGeometry, matRed), [0.5, 0, 0], [0, 0, -Math.PI / 2]],
-        [new Mesh(arrowGeometry, matRed), [-0.5, 0, 0], [0, 0, Math.PI / 2]],
-        [new Mesh(lineGeometry2, matRed), [0, 0, 0], [0, 0, -Math.PI / 2]],
-      ],
-      Y: [
-        [new Mesh(arrowGeometry, matGreen), [0, 0.5, 0]],
-        [new Mesh(arrowGeometry, matGreen), [0, -0.5, 0], [Math.PI, 0, 0]],
-        [new Mesh(lineGeometry2, matGreen)],
-      ],
-      Z: [
-        [new Mesh(arrowGeometry, matBlue), [0, 0, 0.5], [Math.PI / 2, 0, 0]],
-        [new Mesh(arrowGeometry, matBlue), [0, 0, -0.5], [-Math.PI / 2, 0, 0]],
-        [new Mesh(lineGeometry2, matBlue), null, [Math.PI / 2, 0, 0]],
-      ],
-      XYZ: [
-        [
-          new Mesh(new OctahedronGeometry(0.1, 0), matWhiteTransparent.clone()),
-          [0, 0, 0],
-        ],
-      ],
-      XY: [
-        [
-          new Mesh(
-            new BoxGeometry(0.15, 0.15, 0.01),
-            matBlueTransparent.clone()
-          ),
-          [0.15, 0.15, 0],
-        ],
-      ],
-      YZ: [
-        [
-          new Mesh(
-            new BoxGeometry(0.15, 0.15, 0.01),
-            matRedTransparent.clone()
-          ),
-          [0, 0.15, 0.15],
-          [0, Math.PI / 2, 0],
-        ],
-      ],
+      X: [],
+      Y: [],
+      Z: [],
+      XYZ: [],
+      XY: [],
+      YZ: [],
       XZ: [
         [
           new Mesh(
@@ -868,55 +834,12 @@ class TransformControlsGizmo extends Object3D {
     };
 
     const pickerTranslate = {
-      X: [
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [0.3, 0, 0],
-          [0, 0, -Math.PI / 2],
-        ],
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [-0.3, 0, 0],
-          [0, 0, Math.PI / 2],
-        ],
-      ],
-      Y: [
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [0, 0.3, 0],
-        ],
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [0, -0.3, 0],
-          [0, 0, Math.PI],
-        ],
-      ],
-      Z: [
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [0, 0, 0.3],
-          [Math.PI / 2, 0, 0],
-        ],
-        [
-          new Mesh(new CylinderGeometry(0.2, 0, 0.6, 4), matInvisible),
-          [0, 0, -0.3],
-          [-Math.PI / 2, 0, 0],
-        ],
-      ],
-      XYZ: [[new Mesh(new OctahedronGeometry(0.2, 0), matInvisible)]],
-      XY: [
-        [
-          new Mesh(new BoxGeometry(0.2, 0.2, 0.01), matInvisible),
-          [0.15, 0.15, 0],
-        ],
-      ],
-      YZ: [
-        [
-          new Mesh(new BoxGeometry(0.2, 0.2, 0.01), matInvisible),
-          [0, 0.15, 0.15],
-          [0, Math.PI / 2, 0],
-        ],
-      ],
+      X: [],
+      Y: [],
+      Z: [],
+      XYZ: [],
+      XY: [],
+      YZ: [],
       XZ: [
         [
           new Mesh(new BoxGeometry(0.2, 0.2, 0.01), matInvisible),
@@ -927,60 +850,12 @@ class TransformControlsGizmo extends Object3D {
     };
 
     const helperTranslate = {
-      START: [
-        [
-          new Mesh(new OctahedronGeometry(0.01, 2), matHelper),
-          null,
-          null,
-          null,
-          "helper",
-        ],
-      ],
-      END: [
-        [
-          new Mesh(new OctahedronGeometry(0.01, 2), matHelper),
-          null,
-          null,
-          null,
-          "helper",
-        ],
-      ],
-      DELTA: [
-        [
-          new Line(TranslateHelperGeometry(), matHelper),
-          null,
-          null,
-          null,
-          "helper",
-        ],
-      ],
-      X: [
-        [
-          new Line(lineGeometry, matHelper.clone()),
-          [-1e3, 0, 0],
-          null,
-          [1e6, 1, 1],
-          "helper",
-        ],
-      ],
-      Y: [
-        [
-          new Line(lineGeometry, matHelper.clone()),
-          [0, -1e3, 0],
-          [0, 0, Math.PI / 2],
-          [1e6, 1, 1],
-          "helper",
-        ],
-      ],
-      Z: [
-        [
-          new Line(lineGeometry, matHelper.clone()),
-          [0, 0, -1e3],
-          [0, -Math.PI / 2, 0],
-          [1e6, 1, 1],
-          "helper",
-        ],
-      ],
+      START: [],
+      END: [],
+      DELTA: [],
+      X: [],
+      Y: [],
+      Z: [],
     };
 
     const gizmoRotate = {
