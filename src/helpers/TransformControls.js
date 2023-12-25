@@ -799,19 +799,6 @@ class TransformControlsGizmo extends Object3D {
       return geometry;
     }
 
-    // Special geometry for transform helper. If scaled with position vector it spans from [0,0,0] to position
-
-    function TranslateHelperGeometry() {
-      const geometry = new BufferGeometry();
-
-      geometry.setAttribute(
-        "position",
-        new Float32BufferAttribute([0, 0, 0, 1, 1, 1], 3)
-      );
-
-      return geometry;
-    }
-
     // Gizmo definitions - custom hierarchy definitions for setupGizmo() function
 
     const gizmoTranslate = {
@@ -849,15 +836,6 @@ class TransformControlsGizmo extends Object3D {
       ],
     };
 
-    const helperTranslate = {
-      START: [],
-      END: [],
-      DELTA: [],
-      X: [],
-      Y: [],
-      Z: [],
-    };
-
     const gizmoRotate = {
       XYZE: [],
       X: [],
@@ -870,10 +848,6 @@ class TransformControlsGizmo extends Object3D {
       ],
       Z: [],
       E: [],
-    };
-
-    const helperRotate = {
-      AXIS: [],
     };
 
     const pickerRotate = {
@@ -913,12 +887,6 @@ class TransformControlsGizmo extends Object3D {
       YZ: [],
       XZ: [],
       XYZ: [],
-    };
-
-    const helperScale = {
-      X: [],
-      Y: [],
-      Z: [],
     };
 
     // Creates an Object3D with gizmos described in custom hierarchy definition.
@@ -972,7 +940,6 @@ class TransformControlsGizmo extends Object3D {
 
     this.gizmo = {};
     this.picker = {};
-    this.helper = {};
 
     this.add((this.gizmo["translate"] = setupGizmo(gizmoTranslate)));
     this.add((this.gizmo["rotate"] = setupGizmo(gizmoRotate)));
@@ -980,9 +947,6 @@ class TransformControlsGizmo extends Object3D {
     this.add((this.picker["translate"] = setupGizmo(pickerTranslate)));
     this.add((this.picker["rotate"] = setupGizmo(pickerRotate)));
     this.add((this.picker["scale"] = setupGizmo(pickerScale)));
-    this.add((this.helper["translate"] = setupGizmo(helperTranslate)));
-    this.add((this.helper["rotate"] = setupGizmo(helperRotate)));
-    this.add((this.helper["scale"] = setupGizmo(helperScale)));
 
     // Pickers should be hidden always
 
@@ -1005,14 +969,9 @@ class TransformControlsGizmo extends Object3D {
     this.gizmo["rotate"].visible = this.mode === "rotate";
     this.gizmo["scale"].visible = this.mode === "scale";
 
-    this.helper["translate"].visible = this.mode === "translate";
-    this.helper["rotate"].visible = this.mode === "rotate";
-    this.helper["scale"].visible = this.mode === "scale";
-
     let handles = [];
     handles = handles.concat(this.picker[this.mode].children);
     handles = handles.concat(this.gizmo[this.mode].children);
-    handles = handles.concat(this.helper[this.mode].children);
 
     for (let i = 0; i < handles.length; i++) {
       const handle = handles[i];
