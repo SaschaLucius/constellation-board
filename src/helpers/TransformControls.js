@@ -859,10 +859,8 @@ class TransformControlsGizmo extends Object3D {
     };
 
     const gizmoRotate = {
-      XYZE: [
-        [new Mesh(CircleGeometry(0.5, 1), matGray), null, [0, Math.PI / 2, 0]],
-      ],
-      X: [[new Mesh(CircleGeometry(0.5, 0.5), matRed)]],
+      XYZE: [],
+      X: [],
       Y: [
         [
           new Mesh(CircleGeometry(0.5, 0.5), matGreen),
@@ -870,43 +868,17 @@ class TransformControlsGizmo extends Object3D {
           [0, 0, -Math.PI / 2],
         ],
       ],
-      Z: [
-        [
-          new Mesh(CircleGeometry(0.5, 0.5), matBlue),
-          null,
-          [0, Math.PI / 2, 0],
-        ],
-      ],
-      E: [
-        [
-          new Mesh(CircleGeometry(0.75, 1), matYellowTransparent),
-          null,
-          [0, Math.PI / 2, 0],
-        ],
-      ],
+      Z: [],
+      E: [],
     };
 
     const helperRotate = {
-      AXIS: [
-        [
-          new Line(lineGeometry, matHelper.clone()),
-          [-1e3, 0, 0],
-          null,
-          [1e6, 1, 1],
-          "helper",
-        ],
-      ],
+      AXIS: [],
     };
 
     const pickerRotate = {
-      XYZE: [[new Mesh(new SphereGeometry(0.25, 10, 8), matInvisible)]],
-      X: [
-        [
-          new Mesh(new TorusGeometry(0.5, 0.1, 4, 24), matInvisible),
-          [0, 0, 0],
-          [0, -Math.PI / 2, -Math.PI / 2],
-        ],
-      ],
+      XYZE: [],
+      X: [],
       Y: [
         [
           new Mesh(new TorusGeometry(0.5, 0.1, 4, 24), matInvisible),
@@ -914,14 +886,8 @@ class TransformControlsGizmo extends Object3D {
           [Math.PI / 2, 0, 0],
         ],
       ],
-      Z: [
-        [
-          new Mesh(new TorusGeometry(0.5, 0.1, 4, 24), matInvisible),
-          [0, 0, 0],
-          [0, 0, -Math.PI / 2],
-        ],
-      ],
-      E: [[new Mesh(new TorusGeometry(0.75, 0.1, 2, 24), matInvisible)]],
+      Z: [],
+      E: [],
     };
 
     const gizmoScale = {
