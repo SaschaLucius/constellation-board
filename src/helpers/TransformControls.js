@@ -732,59 +732,17 @@ class TransformControlsGizmo extends Object3D {
     const matInvisible = gizmoMaterial.clone();
     matInvisible.opacity = 0.15;
 
-    const matHelper = gizmoLineMaterial.clone();
-    matHelper.opacity = 0.5;
-
-    const matRed = gizmoMaterial.clone();
-    matRed.color.setHex(0xff0000);
-
     const matGreen = gizmoMaterial.clone();
     matGreen.color.setHex(0x00ff00);
-
-    const matBlue = gizmoMaterial.clone();
-    matBlue.color.setHex(0x0000ff);
-
-    const matRedTransparent = gizmoMaterial.clone();
-    matRedTransparent.color.setHex(0xff0000);
-    matRedTransparent.opacity = 0.5;
 
     const matGreenTransparent = gizmoMaterial.clone();
     matGreenTransparent.color.setHex(0x00ff00);
     matGreenTransparent.opacity = 0.5;
 
-    const matBlueTransparent = gizmoMaterial.clone();
-    matBlueTransparent.color.setHex(0x0000ff);
-    matBlueTransparent.opacity = 0.5;
-
-    const matWhiteTransparent = gizmoMaterial.clone();
-    matWhiteTransparent.opacity = 0.25;
-
-    const matYellowTransparent = gizmoMaterial.clone();
-    matYellowTransparent.color.setHex(0xffff00);
-    matYellowTransparent.opacity = 0.25;
-
-    const matYellow = gizmoMaterial.clone();
-    matYellow.color.setHex(0xffff00);
-
-    const matGray = gizmoMaterial.clone();
-    matGray.color.setHex(0x787878);
-
     // reusable geometry
-
-    const arrowGeometry = new CylinderGeometry(0, 0.04, 0.1, 12);
-    arrowGeometry.translate(0, 0.05, 0);
 
     const scaleHandleGeometry = new BoxGeometry(0.08, 0.08, 0.08);
     scaleHandleGeometry.translate(0, 0.04, 0);
-
-    const lineGeometry = new BufferGeometry();
-    lineGeometry.setAttribute(
-      "position",
-      new Float32BufferAttribute([0, 0, 0, 1, 0, 0], 3)
-    );
-
-    const lineGeometry2 = new CylinderGeometry(0.0075, 0.0075, 0.5, 3);
-    lineGeometry2.translate(0, 0.25, 0);
 
     function CircleGeometry(radius, arc) {
       const geometry = new TorusGeometry(
@@ -997,112 +955,6 @@ class TransformControlsGizmo extends Object3D {
       }
 
       handle.scale.set(1, 1, 1).multiplyScalar((factor * this.size) / 4);
-
-      // TODO: simplify helpers and consider decoupling from gizmo
-
-      if (handle.tag === "helper") {
-        handle.visible = false;
-
-        if (handle.name === "AXIS") {
-          handle.visible = !!this.axis;
-
-          if (this.axis === "X") {
-            _tempQuaternion.setFromEuler(_tempEuler.set(0, 0, 0));
-            handle.quaternion.copy(quaternion).multiply(_tempQuaternion);
-
-            if (
-              Math.abs(
-                _alignVector
-                  .copy(_unitX)
-                  .applyQuaternion(quaternion)
-                  .dot(this.eye)
-              ) > 0.9
-            ) {
-              handle.visible = false;
-            }
-          }
-
-          if (this.axis === "Y") {
-            _tempQuaternion.setFromEuler(_tempEuler.set(0, 0, Math.PI / 2));
-            handle.quaternion.copy(quaternion).multiply(_tempQuaternion);
-
-            if (
-              Math.abs(
-                _alignVector
-                  .copy(_unitY)
-                  .applyQuaternion(quaternion)
-                  .dot(this.eye)
-              ) > 0.9
-            ) {
-              handle.visible = false;
-            }
-          }
-
-          if (this.axis === "Z") {
-            _tempQuaternion.setFromEuler(_tempEuler.set(0, Math.PI / 2, 0));
-            handle.quaternion.copy(quaternion).multiply(_tempQuaternion);
-
-            if (
-              Math.abs(
-                _alignVector
-                  .copy(_unitZ)
-                  .applyQuaternion(quaternion)
-                  .dot(this.eye)
-              ) > 0.9
-            ) {
-              handle.visible = false;
-            }
-          }
-
-          if (this.axis === "XYZE") {
-            _tempQuaternion.setFromEuler(_tempEuler.set(0, Math.PI / 2, 0));
-            _alignVector.copy(this.rotationAxis);
-            handle.quaternion.setFromRotationMatrix(
-              _lookAtMatrix.lookAt(_zeroVector, _alignVector, _unitY)
-            );
-            handle.quaternion.multiply(_tempQuaternion);
-            handle.visible = this.dragging;
-          }
-
-          if (this.axis === "E") {
-            handle.visible = false;
-          }
-        } else if (handle.name === "START") {
-          handle.position.copy(this.worldPositionStart);
-          handle.visible = this.dragging;
-        } else if (handle.name === "END") {
-          handle.position.copy(this.worldPosition);
-          handle.visible = this.dragging;
-        } else if (handle.name === "DELTA") {
-          handle.position.copy(this.worldPositionStart);
-          handle.quaternion.copy(this.worldQuaternionStart);
-          _tempVector
-            .set(1e-10, 1e-10, 1e-10)
-            .add(this.worldPositionStart)
-            .sub(this.worldPosition)
-            .multiplyScalar(-1);
-          _tempVector.applyQuaternion(
-            this.worldQuaternionStart.clone().invert()
-          );
-          handle.scale.copy(_tempVector);
-          handle.visible = this.dragging;
-        } else {
-          handle.quaternion.copy(quaternion);
-
-          if (this.dragging) {
-            handle.position.copy(this.worldPositionStart);
-          } else {
-            handle.position.copy(this.worldPosition);
-          }
-
-          if (this.axis) {
-            handle.visible = this.axis.search(handle.name) !== -1;
-          }
-        }
-
-        // If updating helper, skip rest of the loop
-        continue;
-      }
 
       // Align handles to current local or world rotation
 
