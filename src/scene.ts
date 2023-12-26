@@ -32,120 +32,125 @@ import * as animations from "./helpers/animations";
 import { toggleFullScreen } from "./helpers/fullscreen";
 import { resizeRendererToDisplaySize } from "./helpers/responsiveness";
 import "./style.css";
-import { TransformControls } from "three/examples/jsm/controls/TransformControls";
+import { TransformControls } from "./helpers/TransformControls";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
 
 const CANVAS_ID = "scene";
 
 let delta = 1 / 30;
-let interval = 1 / 30;
+const interval = 1 / 30;
 
 let canvas: HTMLElement;
+
 let renderer: WebGLRenderer;
 let labelRenderer: CSS2DRenderer;
+
 let scene: Scene;
+
 let loadingManager: LoadingManager;
+
 let ambientLight: AmbientLight;
 let pointLight: PointLight;
-let players: Object3D[] = [];
-let globalCamera: PerspectiveCamera;
-let activeCamera: PerspectiveCamera;
-let cameraControls: OrbitControls;
-let dragControls: DragControls;
-let transformControls: TransformControls[] = [];
-let axesHelper: AxesHelper;
 let pointLightHelper: PointLightHelper;
-let clock: Clock;
-let stats: Stats;
-let gui: GUI;
-let gridHelper: GridHelper;
+
+let globalCamera: PerspectiveCamera;
+let cameraControls: OrbitControls;
+let playerCamera: PerspectiveCamera;
+let pointerControls: PointerLockControls;
+let activeCamera: PerspectiveCamera;
+
 let planeGeometry: PlaneGeometry;
 let plane: Mesh;
-let qubesFolder: any;
+
+let playerCount = 0;
+const players: {
+  mesh: Mesh<BoxGeometry, MeshStandardMaterial>;
+  transform: TransformControls;
+  label: CSS2DObject;
+  gui: GUI;
+}[] = [];
+const meshes: Mesh[] = [];
+
+let transformControlsEnabled = true;
+let dragControls: DragControls;
+
+let axesHelper: AxesHelper;
+let gridHelper: GridHelper;
+
+let clock: Clock;
+let stats: Stats;
+
+let gui: GUI;
+let guiPlayersFolder: any;
 
 const animation = { enabled: false, play: true };
 
-let isTransforming = true;
-
 const myHelpers = {
-  toggleNames: function () {
+  togglePlayerNames: function () {
     activeCamera.layers.toggle(1);
   },
   toggleTransform: function () {
-    if (isTransforming) {
-      transformControls.forEach((t) => {
-        t.enabled = false;
-        t.visible = false;
-      });
-      isTransforming = false;
+    if (transformControlsEnabled) {
+      players
+        .map((a) => a.transform)
+        .forEach((t) => {
+          t.enabled = false;
+          t.visible = false;
+        });
+      transformControlsEnabled = false;
     } else {
-      transformControls.forEach((t) => {
-        t.enabled = true;
-        t.visible = true;
-      });
-      isTransforming = true;
+      players
+        .map((a) => a.transform)
+        .forEach((t) => {
+          t.enabled = true;
+          t.visible = true;
+        });
+      transformControlsEnabled = true;
     }
   },
 
-  addQube: function () {
-    var playerGroup = new Group();
+  addPlayer: function () {
+    const playerNumber = playerCount++;
+    // Label
+    const labelDiv = document.createElement("div");
+    labelDiv.className = "label";
+    labelDiv.textContent = "Player " + playerNumber;
+    labelDiv.style.backgroundColor = "transparent";
+    const playerName = new CSS2DObject(labelDiv);
+    playerName.position.set(0, 0, 0);
+    playerName.center.set(0, 1);
+    playerName.layers.set(1);
 
+    // Geometry
     const sideLength = 1;
     const cubeGeometry = new BoxGeometry(sideLength, sideLength, sideLength);
     const cubeMaterial = new MeshStandardMaterial({
       color: "#f69f1f",
-      metalness: 0.5,
-      roughness: 0.7,
     });
     const cube = new Mesh(cubeGeometry, cubeMaterial);
-    playerGroup.name = "Group " + cube.id;
+
     cube.castShadow = true;
     cube.position.y = 0.5;
-
-    let newCamera = new PerspectiveCamera(
-      70,
-      window.innerWidth / window.innerHeight,
-      0.01,
-      10
-    );
-    newCamera.position.y = 0.75;
-    newCamera.layers.enableAll();
-
-    const labelDiv = document.createElement("div");
-    labelDiv.className = "label";
-    labelDiv.textContent = playerGroup.name;
-    labelDiv.style.backgroundColor = "transparent";
-
-    const playerName = new CSS2DObject(labelDiv);
-    playerName.position.set(0, 0, 0);
-    playerName.center.set(0, 1);
     cube.add(playerName);
-    playerName.layers.set(1);
 
-    playerGroup.add(newCamera);
-    playerGroup.add(cube);
-
-    playerGroup.userData.limit = {
+    // Limit
+    cube.userData.limit = {
       min: new Vector3(
         -(planeGeometry.parameters.width / 2),
-        0,
+        cube.scale.y / 2,
         -(planeGeometry.parameters.height / 2)
       ),
       max: new Vector3(
         planeGeometry.parameters.width / 2,
-        0,
+        cube.scale.y / 2,
         planeGeometry.parameters.height / 2
       ),
     };
-    playerGroup.userData.update = function () {
-      playerGroup.position.clamp(
-        playerGroup.userData.limit.min,
-        playerGroup.userData.limit.max
-      );
+    cube.userData.update = function () {
+      cube.position.clamp(cube.userData.limit.min, cube.userData.limit.max);
     };
 
-    players.push(playerGroup);
-    scene.add(playerGroup);
-
+    // Transformation
     const transformControl = new TransformControls(
       globalCamera,
       labelRenderer.domElement
@@ -153,65 +158,31 @@ const myHelpers = {
     transformControl.addEventListener("dragging-changed", function (event) {
       cameraControls.enabled = !event.value;
     });
+    transformControl.mode = "translate"; // rotate, scale, translate
 
-    transformControl.attach(playerGroup);
-    transformControl.showY = false;
-    transformControl.enabled = isTransforming;
-    transformControl.visible = isTransforming;
+    transformControl.attach(cube);
 
-    const gizmo = transformControl._gizmo.gizmo;
-
-    gizmo.translate.children
-      .filter((obj: Object3D) =>
-        ["X", "Y", "Z", "XYZ", "XY", "YZ"].includes(obj.name)
-      )
-      .forEach((obj: any) => {
-        obj.visible = false;
-        obj.layers.disable(0);
-      });
-
-    transformControls.push(transformControl);
+    scene.add(cube);
     scene.add(transformControl);
 
-    const playerSubFolder = qubesFolder.addFolder("Player " + cube.id);
-
-    /*playerSubFolder
-      .add(cube.position, "x")
-      .min(-5)
-      .max(5)
-      .step(0.5)
-      .name("pos x");
-    playerSubFolder
-      .add(cube.position, "y")
-      .min(-5)
-      .max(5)
-      .step(0.5)
-      .name("pos y");
-    playerSubFolder
-      .add(cube.position, "z")
-      .min(-5)
-      .max(5)
-      .step(0.5)
-      .name("pos z");*/
-
-    /*playerSubFolder.add(cube.material, "wireframe");*/
+    // GUI
+    const playerSubFolder = guiPlayersFolder.addFolder(
+      "Player " + playerNumber
+    );
     playerSubFolder.addColor(cube.material, "color");
-    /*playerSubFolder.add(cube.material, "metalness", 0, 1, 0.1);
-    playerSubFolder.add(cube.material, "roughness", 0, 1, 0.1);*/
-
-    /*playerSubFolder
-      .add(cube.rotation, "x", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
-      .name("rotate x");*/
     playerSubFolder
-      .add(playerGroup.rotation, "y", 0, Math.PI * 2, 0.01)
+      .add(cube.rotation, "y", 0, Math.PI * 2, 0.01)
       .name("rotation");
-    playerSubFolder.add(playerGroup.scale, "y", 0, 2, 0.01).name("height");
+    playerSubFolder.add(cube.scale, "y", 0, 2, 0.01).name("height");
     playerSubFolder.add(labelDiv, "textContent").name("name");
-    /*playerSubFolder
-      .add(cube.rotation, "z", -Math.PI * 2, Math.PI * 2, Math.PI / 4)
-      .name("rotate z");
 
-    playerSubFolder.add(animation, "enabled").name("animated");*/
+    players.push({
+      mesh: cube,
+      transform: transformControl,
+      label: playerName,
+      gui: playerSubFolder,
+    });
+    meshes.push(cube);
   },
 
   topCamera: function () {
@@ -232,12 +203,13 @@ function ondblclick(event: any) {
     globalCamera.position,
     dir.sub(globalCamera.position).normalize()
   );
-  var intersects = ray.intersectObjects(players);
+  var intersects = ray.intersectObjects(players.map((p) => p.mesh));
   if (intersects.length > 0) {
-    const group = intersects[0].object.parent as Group;
-    const objectCamera = group.children[0] as PerspectiveCamera;
-    activeCamera = objectCamera;
-    globalCamera.layers.disable(1);
+    const position = intersects[0].object.position;
+    playerCamera.position.set(position.x, position.y, position.z);
+    const rotation = intersects[0].object.rotation;
+    playerCamera.rotation.set(rotation.x, rotation.y, rotation.z);
+    activeCamera = playerCamera;
   }
 }
 
@@ -314,8 +286,17 @@ function init() {
     scene.add(plane);
   }
 
-  // ===== 🎥 CAMERA =====
+  // ===== 🎥 CAMERAS =====
   {
+    playerCamera = new PerspectiveCamera(
+      70,
+      window.innerWidth / window.innerHeight,
+      0.01,
+      10
+    );
+    playerCamera.position.y = 0.75;
+    playerCamera.layers.enableAll();
+
     globalCamera = new PerspectiveCamera(
       50,
       canvas.clientWidth / canvas.clientHeight,
@@ -335,44 +316,41 @@ function init() {
     cameraControls.autoRotate = false;
     cameraControls.update();
 
-    dragControls = new DragControls(
-      players,
+    pointerControls = new PointerLockControls(
+      playerCamera,
+      labelRenderer.domElement
+    );
+    pointerControls.unlock();
+    scene.add(pointerControls.getObject());
+
+    /*dragControls = new DragControls(
+      meshes,
       globalCamera,
       labelRenderer.domElement
     );
-    dragControls.transformGroup = true;
+    //dragControls.transformGroup = true;
+    //dragControls.recursive = false;
     dragControls.addEventListener("hoveron", (event) => {
-      const mesh = event.object;
-      mesh.material.emissive.set("orange");
+      event.object.material.emissive.set("orange");
     });
     dragControls.addEventListener("hoveroff", (event) => {
-      const mesh = event.object;
-      mesh.material.emissive.set("black");
+      event.object.material.emissive.set("black");
     });
     dragControls.addEventListener("dragstart", (event) => {
       cameraControls.enabled = false;
       animation.play = false;
-      const mesh = event.object.children[1];
-      mesh.material.emissive.set("black");
-      mesh.material.opacity = 0.7;
-      mesh.material.needsUpdate = true;
+      event.object.material.emissive.set("black");
+      event.object.material.opacity = 0.7;
+      event.object.material.needsUpdate = true;
     });
     dragControls.addEventListener("dragend", (event) => {
       cameraControls.enabled = true;
       animation.play = true;
-      const mesh = event.object.children[1];
-      mesh.material.emissive.set("black");
-      mesh.material.opacity = 1;
-      mesh.material.needsUpdate = true;
+      event.object.material.emissive.set("black");
+      event.object.material.opacity = 1;
+      event.object.material.needsUpdate = true;
     });
-    dragControls.enabled = false;
-
-    // Full screen
-    /*window.addEventListener("dblclick", (event) => {
-      if (event.target === canvas) {
-        toggleFullScreen(canvas);
-      }
-    });*/
+    dragControls.enabled = false;*/
 
     window.addEventListener("dblclick", ondblclick, false);
 
@@ -412,9 +390,9 @@ function init() {
   {
     gui = new GUI({ title: "Menue", width: 300 });
 
-    qubesFolder = gui.addFolder("Positions");
-    qubesFolder.add(myHelpers, "toggleNames").name("Toggle Names");
-    qubesFolder.add(myHelpers, "addQube").name("Add Position");
+    guiPlayersFolder = gui.addFolder("Positions");
+    guiPlayersFolder.add(myHelpers, "togglePlayerNames").name("Toggle Names");
+    guiPlayersFolder.add(myHelpers, "addPlayer").name("Add Position");
 
     const cameraFolder = gui.addFolder("Camera");
 
@@ -426,7 +404,7 @@ function init() {
     planeFolder.add(plane.scale, "y").name("Height");
 
     const controlsFolder = gui.addFolder("Controls");
-    controlsFolder.add(dragControls, "enabled").name("Drag");
+    //controlsFolder.add(dragControls, "enabled").name("Drag");
     controlsFolder
       .add(myHelpers, "toggleTransform")
       .name("Toggle Transformation");
@@ -472,11 +450,19 @@ function animate() {
     stats.update();
 
     players.forEach((player) => {
-      player.userData.limit = {
-        min: new Vector3(-(plane.scale.x / 2), 0, -(plane.scale.y / 2)),
-        max: new Vector3(plane.scale.x / 2, 0, plane.scale.y / 2),
+      player.mesh.userData.limit = {
+        min: new Vector3(
+          -(plane.scale.x / 2),
+          player.mesh.scale.y / 2,
+          -(plane.scale.y / 2)
+        ),
+        max: new Vector3(
+          plane.scale.x / 2,
+          player.mesh.scale.y / 2,
+          plane.scale.y / 2
+        ),
       };
-      player.userData.update();
+      player.mesh.userData.update();
     });
 
     /*if (animation.enabled && animation.play) {
@@ -494,7 +480,7 @@ function animate() {
 
     cameraControls.update();
 
-    labelRenderer.render(scene, globalCamera);
+    labelRenderer.render(scene, activeCamera);
     renderer.render(scene, activeCamera);
 
     delta = delta % interval;

@@ -647,7 +647,7 @@ class TransformControlsGizmo extends Object3D {
             new BoxGeometry(0.15, 0.15, 0.01),
             matGreenTransparent.clone()
           ),
-          [0.15, 0, 0.15],
+          [0, 0, 0],
           [-Math.PI / 2, 0, 0],
         ],
       ],
@@ -657,7 +657,7 @@ class TransformControlsGizmo extends Object3D {
       XZ: [
         [
           new Mesh(new BoxGeometry(0.2, 0.2, 0.01), matInvisible),
-          [0.15, 0, 0.15],
+          [0, 0, 0],
           [-Math.PI / 2, 0, 0],
         ],
       ],
@@ -765,128 +765,128 @@ class TransformControlsGizmo extends Object3D {
   // updateMatrixWorld will update transformations and appearance of individual handles
 
   updateMatrixWorld(force) {
-    const space = this.mode === "scale" ? "local" : this.space; // scale always oriented to local rotation
+    this.gizmo["translate"].visible = true;
+    this.gizmo["rotate"].visible = true;
+    this.gizmo["scale"].visible = true;
 
-    const quaternion =
-      space === "local" ? this.worldQuaternion : _identityQuaternion;
+    for (const thisMode of ["translate", "rotate", "scale"]) {
+      const space = thisMode === "scale" ? "local" : this.space; // scale always oriented to local rotation
 
-    // Show only gizmos for current transform mode
+      const quaternion =
+        space === "local" ? this.worldQuaternion : _identityQuaternion;
 
-    this.gizmo["translate"].visible = true; //this.mode === "translate";
-    this.gizmo["rotate"].visible = true; //this.mode === "rotate";
-    this.gizmo["scale"].visible = true; //this.mode === "scale";
+      // Show only gizmos for current transform mode
 
-    let handles = [];
-    for (const name in ["translate", "rotate", "scale"]) {
-      handles = handles.concat(this.picker[this.mode].children);
-      handles = handles.concat(this.gizmo[this.mode].children);
-    }
+      let handles = [];
+      handles = handles.concat(this.picker[thisMode].children);
+      handles = handles.concat(this.gizmo[thisMode].children);
 
-    for (let i = 0; i < handles.length; i++) {
-      const handle = handles[i];
+      for (let i = 0; i < handles.length; i++) {
+        const handle = handles[i];
 
-      // hide aligned to camera
+        // hide aligned to camera
 
-      handle.visible = true;
-      handle.rotation.set(0, 0, 0);
-      handle.position.copy(this.worldPosition);
+        handle.visible = true;
+        handle.rotation.set(0, 0, 0);
+        handle.position.copy(this.worldPosition);
 
-      let factor;
+        let factor;
 
-      if (this.camera.isOrthographicCamera) {
-        factor = (this.camera.top - this.camera.bottom) / this.camera.zoom;
-      } else {
-        factor =
-          this.worldPosition.distanceTo(this.cameraPosition) *
-          Math.min(
-            (1.9 * Math.tan((Math.PI * this.camera.fov) / 360)) /
-              this.camera.zoom,
-            7
-          );
-      }
-
-      handle.scale.set(1, 1, 1).multiplyScalar((factor * this.size) / 4);
-
-      // Align handles to current local or world rotation
-
-      handle.quaternion.copy(quaternion);
-
-      if (this.mode === "translate" || this.mode === "scale") {
-        // Hide translate and scale axis facing the camera
-
-        const AXIS_HIDE_THRESHOLD = 0.99;
-        const PLANE_HIDE_THRESHOLD = 0.2;
-
-        if (handle.name === "Y") {
-          if (
-            Math.abs(
-              _alignVector
-                .copy(_unitY)
-                .applyQuaternion(quaternion)
-                .dot(this.eye)
-            ) > AXIS_HIDE_THRESHOLD
-          ) {
-            handle.scale.set(1e-10, 1e-10, 1e-10);
-            handle.visible = false;
-          }
+        if (this.camera.isOrthographicCamera) {
+          factor = (this.camera.top - this.camera.bottom) / this.camera.zoom;
+        } else {
+          factor =
+            this.worldPosition.distanceTo(this.cameraPosition) *
+            Math.min(
+              (1.9 * Math.tan((Math.PI * this.camera.fov) / 360)) /
+                this.camera.zoom,
+              7
+            );
         }
 
-        if (handle.name === "XZ") {
-          if (
-            Math.abs(
-              _alignVector
-                .copy(_unitY)
-                .applyQuaternion(quaternion)
-                .dot(this.eye)
-            ) < PLANE_HIDE_THRESHOLD
-          ) {
-            handle.scale.set(1e-10, 1e-10, 1e-10);
-            handle.visible = false;
-          }
-        }
-      }
-      if (this.mode === "rotate") {
+        handle.scale.set(1, 1, 1).multiplyScalar((factor * this.size) / 4);
+
         // Align handles to current local or world rotation
 
-        _tempQuaternion2.copy(quaternion);
-        _alignVector
-          .copy(this.eye)
-          .applyQuaternion(_tempQuaternion.copy(quaternion).invert());
+        handle.quaternion.copy(quaternion);
 
-        if (handle.name === "Y") {
-          _tempQuaternion.setFromAxisAngle(
-            _unitY,
-            Math.atan2(_alignVector.x, _alignVector.z)
-          );
-          _tempQuaternion.multiplyQuaternions(
-            _tempQuaternion2,
-            _tempQuaternion
-          );
-          handle.quaternion.copy(_tempQuaternion);
+        if (thisMode === "translate" || thisMode === "scale") {
+          // Hide translate and scale axis facing the camera
+
+          const AXIS_HIDE_THRESHOLD = 0.99;
+          const PLANE_HIDE_THRESHOLD = 0.2;
+
+          if (handle.name === "Y") {
+            if (
+              Math.abs(
+                _alignVector
+                  .copy(_unitY)
+                  .applyQuaternion(quaternion)
+                  .dot(this.eye)
+              ) > AXIS_HIDE_THRESHOLD
+            ) {
+              handle.scale.set(1e-10, 1e-10, 1e-10);
+              handle.visible = false;
+            }
+          }
+
+          if (handle.name === "XZ") {
+            if (
+              Math.abs(
+                _alignVector
+                  .copy(_unitY)
+                  .applyQuaternion(quaternion)
+                  .dot(this.eye)
+              ) < PLANE_HIDE_THRESHOLD
+            ) {
+              handle.scale.set(1e-10, 1e-10, 1e-10);
+              handle.visible = false;
+            }
+          }
         }
-      }
+        if (thisMode === "rotate") {
+          // Align handles to current local or world rotation
 
-      // highlight selected axis
+          _tempQuaternion2.copy(quaternion);
+          _alignVector
+            .copy(this.eye)
+            .applyQuaternion(_tempQuaternion.copy(quaternion).invert());
 
-      handle.material._color =
-        handle.material._color || handle.material.color.clone();
-      handle.material._opacity =
-        handle.material._opacity || handle.material.opacity;
+          if (handle.name === "Y") {
+            _tempQuaternion.setFromAxisAngle(
+              _unitY,
+              Math.atan2(_alignVector.x, _alignVector.z)
+            );
+            _tempQuaternion.multiplyQuaternions(
+              _tempQuaternion2,
+              _tempQuaternion
+            );
+            handle.quaternion.copy(_tempQuaternion);
+          }
+        }
 
-      handle.material.color.copy(handle.material._color);
-      handle.material.opacity = handle.material._opacity;
+        // highlight selected axis
 
-      if (this.enabled && this.axis) {
-        if (handle.name === this.axis) {
-          handle.material.color.setHex(0xffff00);
-          handle.material.opacity = 1.0;
-        } else if (
-          this.axis.split("").some(function (a) {
-            return handle.name === a;
-          })
-        ) {
-          handle.material.color.setHex(0xffff00);
-          handle.material.opacity = 1.0;
+        handle.material._color =
+          handle.material._color || handle.material.color.clone();
+        handle.material._opacity =
+          handle.material._opacity || handle.material.opacity;
+
+        handle.material.color.copy(handle.material._color);
+        handle.material.opacity = handle.material._opacity;
+
+        if (this.enabled && this.axis) {
+          if (handle.name === this.axis) {
+            handle.material.color.setHex(0xffff00);
+            handle.material.opacity = 1.0;
+          } else if (
+            this.axis.split("").some(function (a) {
+              return handle.name === a;
+            })
+          ) {
+            handle.material.color.setHex(0xffff00);
+            handle.material.opacity = 1.0;
+          }
         }
       }
     }
