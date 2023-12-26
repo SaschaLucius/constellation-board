@@ -98,9 +98,6 @@ class TransformControls extends Object3D {
     defineProperty("enabled", true);
     defineProperty("axis", null);
     defineProperty("mode", "translate");
-    defineProperty("translationSnap", null);
-    defineProperty("rotationSnap", null);
-    defineProperty("scaleSnap", null);
     defineProperty("space", "world");
     defineProperty("size", 1);
     defineProperty("dragging", false);
@@ -219,7 +216,6 @@ class TransformControls extends Object3D {
     );
 
     if (intersect) {
-      console.log(intersect.object.name);
       this.axis = intersect.object.name;
     } else {
       this.axis = null;
@@ -320,68 +316,6 @@ class TransformControls extends Object3D {
       }
 
       object.position.copy(this._offset).add(this._positionStart);
-
-      // Apply translation snap
-
-      if (this.translationSnap) {
-        if (space === "local") {
-          object.position.applyQuaternion(
-            _tempQuaternion.copy(this._quaternionStart).invert()
-          );
-
-          if (axis.search("X") !== -1) {
-            object.position.x =
-              Math.round(object.position.x / this.translationSnap) *
-              this.translationSnap;
-          }
-
-          if (axis.search("Y") !== -1) {
-            object.position.y =
-              Math.round(object.position.y / this.translationSnap) *
-              this.translationSnap;
-          }
-
-          if (axis.search("Z") !== -1) {
-            object.position.z =
-              Math.round(object.position.z / this.translationSnap) *
-              this.translationSnap;
-          }
-
-          object.position.applyQuaternion(this._quaternionStart);
-        }
-
-        if (space === "world") {
-          if (object.parent) {
-            object.position.add(
-              _tempVector.setFromMatrixPosition(object.parent.matrixWorld)
-            );
-          }
-
-          if (axis.search("X") !== -1) {
-            object.position.x =
-              Math.round(object.position.x / this.translationSnap) *
-              this.translationSnap;
-          }
-
-          if (axis.search("Y") !== -1) {
-            object.position.y =
-              Math.round(object.position.y / this.translationSnap) *
-              this.translationSnap;
-          }
-
-          if (axis.search("Z") !== -1) {
-            object.position.z =
-              Math.round(object.position.z / this.translationSnap) *
-              this.translationSnap;
-          }
-
-          if (object.parent) {
-            object.position.sub(
-              _tempVector.setFromMatrixPosition(object.parent.matrixWorld)
-            );
-          }
-        }
-      }
     } else if (mode === "scale") {
       _tempVector.copy(this.pointStart);
       _tempVector2.copy(this.pointEnd);
@@ -406,26 +340,6 @@ class TransformControls extends Object3D {
       // Apply scale
 
       object.scale.copy(this._scaleStart).multiply(_tempVector2);
-
-      if (this.scaleSnap) {
-        if (axis.search("X") !== -1) {
-          object.scale.x =
-            Math.round(object.scale.x / this.scaleSnap) * this.scaleSnap ||
-            this.scaleSnap;
-        }
-
-        if (axis.search("Y") !== -1) {
-          object.scale.y =
-            Math.round(object.scale.y / this.scaleSnap) * this.scaleSnap ||
-            this.scaleSnap;
-        }
-
-        if (axis.search("Z") !== -1) {
-          object.scale.z =
-            Math.round(object.scale.z / this.scaleSnap) * this.scaleSnap ||
-            this.scaleSnap;
-        }
-      }
     } else if (mode === "rotate") {
       this._offset.copy(this.pointEnd).sub(this.pointStart);
 
@@ -467,13 +381,6 @@ class TransformControls extends Object3D {
         this.rotationAngle *=
           this._endNorm.cross(this._startNorm).dot(this.eye) < 0 ? 1 : -1;
       }
-
-      // Apply rotation snap
-
-      if (this.rotationSnap)
-        this.rotationAngle =
-          Math.round(this.rotationAngle / this.rotationSnap) *
-          this.rotationSnap;
 
       // Apply rotate
       if (space === "local") {
@@ -570,18 +477,6 @@ class TransformControls extends Object3D {
 
   setMode(mode) {
     this.mode = mode;
-  }
-
-  setTranslationSnap(translationSnap) {
-    this.translationSnap = translationSnap;
-  }
-
-  setRotationSnap(rotationSnap) {
-    this.rotationSnap = rotationSnap;
-  }
-
-  setScaleSnap(scaleSnap) {
-    this.scaleSnap = scaleSnap;
   }
 
   setSize(size) {
