@@ -101,9 +101,6 @@ class TransformControls extends Object3D {
     defineProperty("space", "world");
     defineProperty("size", 1);
     defineProperty("dragging", false);
-    defineProperty("showX", true);
-    defineProperty("showY", true);
-    defineProperty("showZ", true);
 
     // Reusable utility variables
 
@@ -948,18 +945,6 @@ class TransformControlsGizmo extends Object3D {
           handle.quaternion.copy(_tempQuaternion);
         }
       }
-
-      // Hide disabled axes
-      handle.visible =
-        handle.visible && (handle.name.indexOf("X") === -1 || this.showX);
-      handle.visible =
-        handle.visible && (handle.name.indexOf("Y") === -1 || this.showY);
-      handle.visible =
-        handle.visible && (handle.name.indexOf("Z") === -1 || this.showZ);
-      handle.visible =
-        handle.visible &&
-        (handle.name.indexOf("E") === -1 ||
-          (this.showX && this.showY && this.showZ));
 
       // highlight selected axis
 
