@@ -49,7 +49,7 @@ class TransformControls extends Object3D {
 
     this.isTransformControls = true;
 
-    this.visible = false;
+    this.visible = true;
     this.domElement = domElement;
     this.domElement.style.touchAction = "none"; // disable touch scroll
 
@@ -640,6 +640,8 @@ class TransformControlsGizmo extends Object3D {
 
     // Gizmo definitions - custom hierarchy definitions for setupGizmo() function
 
+    const yMove = -0.375 * object.geometry.parameters.height;
+
     const gizmoTranslate = {
       XZ: [
         [
@@ -647,7 +649,7 @@ class TransformControlsGizmo extends Object3D {
             new BoxGeometry(0.15, 0.15, 0.01),
             matGreenTransparent.clone()
           ),
-          [0, 0, 0],
+          [0, yMove, 0],
           [-Math.PI / 2, 0, 0],
         ],
       ],
@@ -657,7 +659,7 @@ class TransformControlsGizmo extends Object3D {
       XZ: [
         [
           new Mesh(new BoxGeometry(0.2, 0.2, 0.01), matInvisible),
-          [0, 0, 0],
+          [0, yMove, 0],
           [-Math.PI / 2, 0, 0],
         ],
       ],
@@ -667,7 +669,7 @@ class TransformControlsGizmo extends Object3D {
       Y: [
         [
           new Mesh(CircleGeometry(0.5, 0.5), matGreen),
-          null,
+          [0, yMove, 0],
           [0, 0, -Math.PI / 2],
         ],
       ],
@@ -677,7 +679,7 @@ class TransformControlsGizmo extends Object3D {
       Y: [
         [
           new Mesh(new TorusGeometry(0.5, 0.1, 4, 24), matInvisible),
-          [0, 0, 0],
+          [0, yMove, 0],
           [Math.PI / 2, 0, 0],
         ],
       ],
