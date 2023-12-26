@@ -811,20 +811,6 @@ class TransformControlsGizmo extends Object3D {
         const AXIS_HIDE_THRESHOLD = 0.99;
         const PLANE_HIDE_THRESHOLD = 0.2;
 
-        if (handle.name === "X") {
-          if (
-            Math.abs(
-              _alignVector
-                .copy(_unitX)
-                .applyQuaternion(quaternion)
-                .dot(this.eye)
-            ) > AXIS_HIDE_THRESHOLD
-          ) {
-            handle.scale.set(1e-10, 1e-10, 1e-10);
-            handle.visible = false;
-          }
-        }
-
         if (handle.name === "Y") {
           if (
             Math.abs(
@@ -833,48 +819,6 @@ class TransformControlsGizmo extends Object3D {
                 .applyQuaternion(quaternion)
                 .dot(this.eye)
             ) > AXIS_HIDE_THRESHOLD
-          ) {
-            handle.scale.set(1e-10, 1e-10, 1e-10);
-            handle.visible = false;
-          }
-        }
-
-        if (handle.name === "Z") {
-          if (
-            Math.abs(
-              _alignVector
-                .copy(_unitZ)
-                .applyQuaternion(quaternion)
-                .dot(this.eye)
-            ) > AXIS_HIDE_THRESHOLD
-          ) {
-            handle.scale.set(1e-10, 1e-10, 1e-10);
-            handle.visible = false;
-          }
-        }
-
-        if (handle.name === "XY") {
-          if (
-            Math.abs(
-              _alignVector
-                .copy(_unitZ)
-                .applyQuaternion(quaternion)
-                .dot(this.eye)
-            ) < PLANE_HIDE_THRESHOLD
-          ) {
-            handle.scale.set(1e-10, 1e-10, 1e-10);
-            handle.visible = false;
-          }
-        }
-
-        if (handle.name === "YZ") {
-          if (
-            Math.abs(
-              _alignVector
-                .copy(_unitX)
-                .applyQuaternion(quaternion)
-                .dot(this.eye)
-            ) < PLANE_HIDE_THRESHOLD
           ) {
             handle.scale.set(1e-10, 1e-10, 1e-10);
             handle.visible = false;
@@ -903,40 +847,10 @@ class TransformControlsGizmo extends Object3D {
           .copy(this.eye)
           .applyQuaternion(_tempQuaternion.copy(quaternion).invert());
 
-        if (handle.name.search("E") !== -1) {
-          handle.quaternion.setFromRotationMatrix(
-            _lookAtMatrix.lookAt(this.eye, _zeroVector, _unitY)
-          );
-        }
-
-        if (handle.name === "X") {
-          _tempQuaternion.setFromAxisAngle(
-            _unitX,
-            Math.atan2(-_alignVector.y, _alignVector.z)
-          );
-          _tempQuaternion.multiplyQuaternions(
-            _tempQuaternion2,
-            _tempQuaternion
-          );
-          handle.quaternion.copy(_tempQuaternion);
-        }
-
         if (handle.name === "Y") {
           _tempQuaternion.setFromAxisAngle(
             _unitY,
             Math.atan2(_alignVector.x, _alignVector.z)
-          );
-          _tempQuaternion.multiplyQuaternions(
-            _tempQuaternion2,
-            _tempQuaternion
-          );
-          handle.quaternion.copy(_tempQuaternion);
-        }
-
-        if (handle.name === "Z") {
-          _tempQuaternion.setFromAxisAngle(
-            _unitZ,
-            Math.atan2(_alignVector.y, _alignVector.x)
           );
           _tempQuaternion.multiplyQuaternions(
             _tempQuaternion2,
