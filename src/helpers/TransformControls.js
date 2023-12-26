@@ -37,7 +37,7 @@ const _mouseUpEvent = { type: "mouseUp", mode: null };
 const _objectChangeEvent = { type: "objectChange" };
 
 class TransformControls extends Object3D {
-  constructor(camera, domElement) {
+  constructor(camera, domElement, object) {
     super();
 
     if (domElement === undefined) {
@@ -53,7 +53,7 @@ class TransformControls extends Object3D {
     this.domElement = domElement;
     this.domElement.style.touchAction = "none"; // disable touch scroll
 
-    const _gizmo = new TransformControlsGizmo();
+    const _gizmo = new TransformControlsGizmo(object);
     this._gizmo = _gizmo;
     this.add(_gizmo);
 
@@ -94,7 +94,7 @@ class TransformControls extends Object3D {
     // Defined properties are passed down to gizmo and plane
 
     defineProperty("camera", camera);
-    defineProperty("object", undefined);
+    defineProperty("object", object);
     defineProperty("enabled", true);
     defineProperty("axis", null);
     defineProperty("mode", "translate");
@@ -583,7 +583,7 @@ const _v2 = new Vector3();
 const _v3 = new Vector3();
 
 class TransformControlsGizmo extends Object3D {
-  constructor() {
+  constructor(object) {
     super();
 
     this.isTransformControlsGizmo = true;

@@ -153,14 +153,13 @@ const myHelpers = {
     // Transformation
     const transformControl = new TransformControls(
       globalCamera,
-      labelRenderer.domElement
+      labelRenderer.domElement,
+      cube
     );
     transformControl.addEventListener("dragging-changed", function (event) {
       cameraControls.enabled = !event.value;
     });
     transformControl.mode = "translate"; // rotate, scale, translate
-
-    transformControl.attach(cube);
 
     scene.add(cube);
     scene.add(transformControl);
