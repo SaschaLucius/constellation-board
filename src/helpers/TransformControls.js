@@ -207,15 +207,19 @@ class TransformControls extends Object3D {
 
     _raycaster.setFromCamera(pointer, this.camera);
 
-    const intersect = intersectObjectWithRay(
-      this._gizmo.picker[this.mode],
-      _raycaster
-    );
+    for (const name of ["translate", "rotate", "scale"]) {
+      const intersect = intersectObjectWithRay(
+        this._gizmo.picker[name],
+        _raycaster
+      );
 
-    if (intersect) {
-      this.axis = intersect.object.name;
-    } else {
-      this.axis = null;
+      if (intersect) {
+        this.axis = intersect.object.name;
+        this.mode = name;
+        return;
+      } else {
+        this.axis = null;
+      }
     }
   }
 
@@ -773,8 +777,10 @@ class TransformControlsGizmo extends Object3D {
     this.gizmo["scale"].visible = true; //this.mode === "scale";
 
     let handles = [];
-    handles = handles.concat(this.picker[this.mode].children);
-    handles = handles.concat(this.gizmo[this.mode].children);
+    for (const name in ["translate", "rotate", "scale"]) {
+      handles = handles.concat(this.picker[this.mode].children);
+      handles = handles.concat(this.gizmo[this.mode].children);
+    }
 
     for (let i = 0; i < handles.length; i++) {
       const handle = handles[i];
