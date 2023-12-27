@@ -209,6 +209,8 @@ function ondblclick(event: any) {
     const rotation = intersects[0].object.rotation;
     playerCamera.rotation.set(rotation.x, rotation.y, rotation.z);
     activeCamera = playerCamera;
+    cameraControls.enabled = false;
+    pointerControls.lock();
   }
 }
 
@@ -319,7 +321,13 @@ function init() {
       playerCamera,
       labelRenderer.domElement
     );
-    pointerControls.unlock();
+    pointerControls.addEventListener("lock", function () {
+      console.log("lock");
+    });
+
+    pointerControls.addEventListener("unlock", function () {
+      console.log("unlock");
+    });
     scene.add(pointerControls.getObject());
 
     /*dragControls = new DragControls(
@@ -358,6 +366,7 @@ function init() {
       var keyCode = event.which;
       if (keyCode == 27) {
         activeCamera = globalCamera;
+        cameraControls.enabled = true;
       }
     }
   }
