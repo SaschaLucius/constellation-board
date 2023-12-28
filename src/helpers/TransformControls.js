@@ -50,6 +50,7 @@ class TransformControls extends Object3D {
     this.isTransformControls = true;
 
     this.visible = true;
+    this.enabled = true;
     this.domElement = domElement;
     this.domElement.style.touchAction = "none"; // disable touch scroll
 

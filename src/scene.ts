@@ -155,7 +155,8 @@ const myHelpers = {
       cameraControls.enabled = !event.value;
     });
     transformControl.mode = "translate"; // rotate, scale, translate
-
+    transformControl.enabled = transformControlsEnabled;
+    transformControl.visible = transformControlsEnabled;
     scene.add(cube);
     scene.add(transformControl);
 
@@ -165,6 +166,15 @@ const myHelpers = {
     );
     playerSubFolder.add(labelDiv, "textContent").name("name");
     playerSubFolder.addColor(cube.material, "color");
+    const help = {
+      remove: function () {
+        cube.remove(playerName);
+        scene.remove(cube);
+        scene.remove(transformControl);
+        playerSubFolder.destroy();
+      },
+    };
+    playerSubFolder.add(help, "remove").name("remove");
 
     players.push({
       mesh: cube,
