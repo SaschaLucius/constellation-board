@@ -30,6 +30,7 @@ import { resizeRendererToDisplaySize } from "./helpers/responsiveness";
 import "./style.css";
 import { TransformControls } from "./helpers/TransformControls";
 import { PointerLockControls } from "./helpers/PointerLockControls";
+import { t } from "./locales/locales";
 
 const CANVAS_ID = "scene";
 
@@ -108,7 +109,7 @@ const myHelpers = {
     // Label
     const labelDiv = document.createElement("div");
     labelDiv.className = "label";
-    labelDiv.textContent = "Position " + playerNumber;
+    labelDiv.textContent = t("position", { count: playerNumber });
     labelDiv.style.backgroundColor = "transparent";
     const playerName = new CSS2DObject(labelDiv);
     playerName.position.set(0, 0, 0);
@@ -417,7 +418,7 @@ function init() {
 
   // ==== 🐞 DEBUG GUI ====
   {
-    gui = new GUI({ title: "Menue", width: 300 });
+    gui = new GUI({ title: "Menu", width: 300 });
 
     guiPlayersFolder = gui.addFolder("Positions");
     guiPlayersFolder.add(myHelpers, "togglePlayerNames").name("Toggle Names");

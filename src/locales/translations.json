@@ -1,0 +1,8 @@
+{
+  "en": {
+    "position": "Position %{count}"
+  },
+  "de": {
+    "position": "Stellvertreter %{count}"
+  }
+}
