@@ -5,12 +5,10 @@ import {
   BoxGeometry,
   Clock,
   GridHelper,
-  Group,
   LoadingManager,
   Mesh,
   MeshLambertMaterial,
   MeshStandardMaterial,
-  Object3D,
   PCFSoftShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
@@ -28,12 +26,10 @@ import {
   CSS2DObject,
 } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import Stats from "three/examples/jsm/libs/stats.module";
-import * as animations from "./helpers/animations";
-import { toggleFullScreen } from "./helpers/fullscreen";
 import { resizeRendererToDisplaySize } from "./helpers/responsiveness";
 import "./style.css";
 import { TransformControls } from "./helpers/TransformControls";
-import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
+import { PointerLockControls } from "./helpers/PointerLockControls";
 
 const CANVAS_ID = "scene";
 
@@ -72,7 +68,6 @@ const players: {
 const meshes: Mesh[] = [];
 
 let transformControlsEnabled = true;
-let dragControls: DragControls;
 
 let axesHelper: AxesHelper;
 let gridHelper: GridHelper;
@@ -83,27 +78,26 @@ let stats: Stats;
 let gui: GUI;
 let guiPlayersFolder: any;
 
-const animation = { enabled: false, play: true };
-
 const myHelpers = {
   togglePlayerNames: function () {
     activeCamera.layers.toggle(1);
   },
+
   toggleTransform: function () {
     if (transformControlsEnabled) {
       players
-        .map((a) => a.transform)
-        .forEach((t) => {
-          t.enabled = false;
-          t.visible = false;
+        .map((player) => player.transform)
+        .forEach((transform) => {
+          transform.enabled = false;
+          transform.visible = false;
         });
       transformControlsEnabled = false;
     } else {
       players
-        .map((a) => a.transform)
-        .forEach((t) => {
-          t.enabled = true;
-          t.visible = true;
+        .map((player) => player.transform)
+        .forEach((transform) => {
+          transform.enabled = true;
+          transform.visible = true;
         });
       transformControlsEnabled = true;
     }
@@ -114,7 +108,7 @@ const myHelpers = {
     // Label
     const labelDiv = document.createElement("div");
     labelDiv.className = "label";
-    labelDiv.textContent = "Player " + playerNumber;
+    labelDiv.textContent = "Position " + playerNumber;
     labelDiv.style.backgroundColor = "transparent";
     const playerName = new CSS2DObject(labelDiv);
     playerName.position.set(0, 0, 0);
@@ -130,7 +124,7 @@ const myHelpers = {
     const cube = new Mesh(cubeGeometry, cubeMaterial);
 
     cube.castShadow = true;
-    cube.position.y = 0.5;
+    cube.position.y = sideLength / 2;
     cube.add(playerName);
 
     // Limit
@@ -148,6 +142,7 @@ const myHelpers = {
     };
     cube.userData.update = function () {
       cube.position.clamp(cube.userData.limit.min, cube.userData.limit.max);
+      cube.scale.clampScalar(0.5, 3);
     };
 
     // Transformation
@@ -166,14 +161,10 @@ const myHelpers = {
 
     // GUI
     const playerSubFolder = guiPlayersFolder.addFolder(
-      "Player " + playerNumber
+      "Position " + playerNumber
     );
-    playerSubFolder.addColor(cube.material, "color");
-    playerSubFolder
-      .add(cube.rotation, "y", 0, Math.PI * 2, 0.01)
-      .name("rotation");
-    playerSubFolder.add(cube.scale, "y", 0, 2, 0.01).name("height");
     playerSubFolder.add(labelDiv, "textContent").name("name");
+    playerSubFolder.addColor(cube.material, "color");
 
     players.push({
       mesh: cube,
@@ -192,7 +183,7 @@ const myHelpers = {
   },
 };
 
-function ondblclick(event: any) {
+function onDblClick(event: any) {
   let x = (event.clientX / window.innerWidth) * 2 - 1;
   let y = -(event.clientY / window.innerHeight) * 2 + 1;
   let dir = new Vector3(x, y, -1);
@@ -204,6 +195,15 @@ function ondblclick(event: any) {
   );
   var intersects = ray.intersectObjects(players.map((p) => p.mesh));
   if (intersects.length > 0) {
+    if (transformControlsEnabled) {
+      players
+        .map((player) => player.transform)
+        .forEach((transform) => {
+          transform.enabled = false;
+          transform.visible = false;
+        });
+    }
+
     const position = intersects[0].object.position;
     playerCamera.position.set(position.x, position.y, position.z);
     const rotation = intersects[0].object.rotation;
@@ -315,19 +315,20 @@ function init() {
     cameraControls.target = new Vector3();
     cameraControls.enableDamping = true;
     cameraControls.autoRotate = false;
+    cameraControls.maxPolarAngle = Math.PI / 2;
+    cameraControls.minDistance = 0;
+    cameraControls.maxDistance = 120;
     cameraControls.update();
 
     pointerControls = new PointerLockControls(
       playerCamera,
       labelRenderer.domElement
     );
-    pointerControls.addEventListener("lock", function () {
-      console.log("lock");
-    });
+    pointerControls.maxPolarAngleX = (Math.PI / 4) * 3;
+    pointerControls.minPolarAngleX = Math.PI / 4;
+    pointerControls.maxAngleY = Math.PI / 3;
+    pointerControls.pointerSpeed = 0.5;
 
-    pointerControls.addEventListener("unlock", function () {
-      console.log("unlock");
-    });
     scene.add(pointerControls.getObject());
 
     /*dragControls = new DragControls(
@@ -359,14 +360,24 @@ function init() {
     });
     dragControls.enabled = false;*/
 
-    window.addEventListener("dblclick", ondblclick, false);
+    window.addEventListener("dblclick", onDblClick, false);
 
     window.addEventListener("keydown", onDocumentKeyDown, false);
     function onDocumentKeyDown(event: any) {
       var keyCode = event.which;
       if (keyCode == 27) {
+        // ESC
         activeCamera = globalCamera;
         cameraControls.enabled = true;
+
+        if (transformControlsEnabled) {
+          players
+            .map((player) => player.transform)
+            .forEach((transform) => {
+              transform.enabled = true;
+              transform.visible = true;
+            });
+        }
       }
     }
   }
