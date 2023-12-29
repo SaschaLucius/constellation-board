@@ -19,7 +19,6 @@ import {
   Vector3,
   WebGLRenderer,
 } from "three";
-import { DragControls } from "three/examples/jsm/controls/DragControls";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import {
   CSS2DRenderer,
