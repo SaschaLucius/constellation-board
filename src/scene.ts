@@ -227,10 +227,29 @@ function onDblClick(event: any) {
 init();
 animate();
 
+function handleInstructions() {
+  const blocker = document.getElementById("blocker");
+  const instructions = document.getElementById("instructions");
+  instructions.style.display = "";
+  blocker.style.display = "block";
+
+  const handleMouseDown = function () {
+    if (instructions.style.display !== "none") {
+      instructions.style.display = "none";
+      blocker.style.display = "none";
+      cameraControls.enabled = true;
+      window.removeEventListener("click", handleMouseDown, false);
+    }
+  };
+  window.addEventListener("click", handleMouseDown);
+}
+
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
   {
     canvas = document.querySelector(`canvas#${CANVAS_ID}`)!;
+
+    handleInstructions();
 
     renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -328,6 +347,7 @@ function init() {
     cameraControls.maxPolarAngle = Math.PI / 2;
     cameraControls.minDistance = 0;
     cameraControls.maxDistance = 120;
+    cameraControls.enabled = false;
     cameraControls.update();
 
     pointerControls = new PointerLockControls(
@@ -377,16 +397,21 @@ function init() {
       var keyCode = event.which;
       if (keyCode == 27) {
         // ESC
-        activeCamera = globalCamera;
-        cameraControls.enabled = true;
+        if (activeCamera === globalCamera) {
+          cameraControls.enabled = false;
+          handleInstructions();
+        } else {
+          activeCamera = globalCamera;
+          cameraControls.enabled = true;
 
-        if (transformControlsEnabled) {
-          players
-            .map((player) => player.transform)
-            .forEach((transform) => {
-              transform.enabled = true;
-              transform.visible = true;
-            });
+          if (transformControlsEnabled) {
+            players
+              .map((player) => player.transform)
+              .forEach((transform) => {
+                transform.enabled = true;
+                transform.visible = true;
+              });
+          }
         }
       }
     }
