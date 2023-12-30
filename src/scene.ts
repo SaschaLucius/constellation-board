@@ -5,8 +5,10 @@ import {
   BoxGeometry,
   Clock,
   GridHelper,
+  TextureLoader,
   LoadingManager,
   Mesh,
+  MeshBasicMaterial,
   MeshLambertMaterial,
   MeshStandardMaterial,
   PCFSoftShadowMap,
@@ -16,8 +18,11 @@ import {
   PointLightHelper,
   Raycaster,
   Scene,
+  SphereGeometry,
   Vector3,
   WebGLRenderer,
+  BackSide,
+  MeshPhongMaterial,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import {
@@ -57,6 +62,7 @@ let activeCamera: PerspectiveCamera;
 
 let planeGeometry: PlaneGeometry;
 let plane: Mesh;
+let sphere: Mesh;
 
 let playerCount = 0;
 const players: {
@@ -303,17 +309,31 @@ function init() {
   // ===== 📦 OBJECTS =====
   {
     planeGeometry = new PlaneGeometry(1, 1);
-    const planeMaterial = new MeshLambertMaterial({
-      color: "gray",
-      emissive: "teal",
-      emissiveIntensity: 0.2,
-      side: 2,
+    const planeTexture = new TextureLoader().load("/wood/BaseColor.png");
+    const normalTexture = new TextureLoader().load("/wood/Normal.png");
+
+    const planeMaterial = new MeshPhongMaterial({
+      map: planeTexture,
+      normalMap: normalTexture,
+      side: BackSide,
     });
+    planeMaterial.normalScale.set(2, 2);
     plane = new Mesh(planeGeometry, planeMaterial);
     plane.rotateX(Math.PI / 2);
     plane.receiveShadow = true;
     plane.scale.set(10, 10, 0);
     scene.add(plane);
+
+    const texture = new TextureLoader().load("/Stenbocki_maja.jpg");
+    const material = new MeshBasicMaterial({
+      map: texture,
+      side: BackSide,
+    });
+    sphere = new Mesh(new SphereGeometry(60, 20, 20), material);
+    sphere.position.y = 10;
+    sphere.visible = false;
+
+    scene.add(sphere);
   }
 
   // ===== 🎥 CAMERAS =====
@@ -322,7 +342,7 @@ function init() {
       70,
       window.innerWidth / window.innerHeight,
       0.01,
-      10
+      200
     );
     playerCamera.position.y = 0.75;
     playerCamera.layers.enableAll();
@@ -331,7 +351,7 @@ function init() {
       50,
       canvas.clientWidth / canvas.clientHeight,
       0.1,
-      100
+      200
     );
     globalCamera.position.set(2, 2, 5);
     globalCamera.layers.enableAll();
@@ -360,35 +380,6 @@ function init() {
     pointerControls.pointerSpeed = 0.5;
 
     scene.add(pointerControls.getObject());
-
-    /*dragControls = new DragControls(
-      meshes,
-      globalCamera,
-      labelRenderer.domElement
-    );
-    //dragControls.transformGroup = true;
-    //dragControls.recursive = false;
-    dragControls.addEventListener("hoveron", (event) => {
-      event.object.material.emissive.set("orange");
-    });
-    dragControls.addEventListener("hoveroff", (event) => {
-      event.object.material.emissive.set("black");
-    });
-    dragControls.addEventListener("dragstart", (event) => {
-      cameraControls.enabled = false;
-      animation.play = false;
-      event.object.material.emissive.set("black");
-      event.object.material.opacity = 0.7;
-      event.object.material.needsUpdate = true;
-    });
-    dragControls.addEventListener("dragend", (event) => {
-      cameraControls.enabled = true;
-      animation.play = true;
-      event.object.material.emissive.set("black");
-      event.object.material.opacity = 1;
-      event.object.material.needsUpdate = true;
-    });
-    dragControls.enabled = false;*/
 
     window.addEventListener("dblclick", onDblClick, false);
 
@@ -453,12 +444,12 @@ function init() {
     cameraFolder.add(cameraControls, "autoRotate").name("Rotate");
     cameraFolder.add(myHelpers, "topCamera").name("Top Down");
 
-    const planeFolder = gui.addFolder("Plane");
-    planeFolder.add(plane.scale, "x").name("Width");
-    planeFolder.add(plane.scale, "y").name("Height");
+    const environmentFolder = gui.addFolder("Environment");
+    environmentFolder.add(plane.scale, "x").name("Board Width");
+    environmentFolder.add(plane.scale, "y").name("Board Height");
+    environmentFolder.add(sphere, "visible").name("Room");
 
     const controlsFolder = gui.addFolder("Controls");
-    //controlsFolder.add(dragControls, "enabled").name("Drag");
     controlsFolder
       .add(myHelpers, "toggleTransform")
       .name("Toggle Transformation");
