@@ -35,6 +35,9 @@ import "./style.css";
 import { TransformControls } from "./helpers/TransformControls";
 import { PointerLockControls } from "./helpers/PointerLockControls";
 import { t } from "./locales/locales";
+import sphereMaterial from "/Stenbocki_maja.jpg?url";
+import planeMaterials from "/wood/BaseColor.png?url";
+import planeNormals from "/wood/Normal.png?url";
 
 let debug = false;
 const CANVAS_ID = "scene";
@@ -323,8 +326,8 @@ function init() {
   // ===== 📦 OBJECTS =====
   {
     planeGeometry = new PlaneGeometry(1, 1);
-    const planeTexture = new TextureLoader().load("/wood/BaseColor.png");
-    const normalTexture = new TextureLoader().load("/wood/Normal.png");
+    const planeTexture = new TextureLoader().load(planeMaterials);
+    const normalTexture = new TextureLoader().load(planeNormals);
 
     const planeMaterial = new MeshPhongMaterial({
       map: planeTexture,
@@ -338,7 +341,7 @@ function init() {
     plane.scale.set(10, 10, 0);
     scene.add(plane);
 
-    const texture = new TextureLoader().load("/Stenbocki_maja.jpg");
+    const texture = new TextureLoader().load(sphereMaterial);
     const material = new MeshBasicMaterial({
       map: texture,
       side: BackSide,
