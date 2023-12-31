@@ -141,35 +141,35 @@ const myHelpers = {
     const cubeMaterial = new MeshStandardMaterial({
       color: "#f69f1f",
     });
-    const cube = new Mesh(geometry, cubeMaterial);
+    const mesh = new Mesh(geometry, cubeMaterial);
 
-    cube.castShadow = true;
-    cube.position.y = sideLength / 2;
-    cube.add(playerName);
+    mesh.castShadow = true;
+    mesh.position.y = 1 / 2;
+    mesh.add(playerName);
 
     // Limit
-    cube.userData.limit = {
+    mesh.userData.limit = {
       min: new Vector3(
         -(planeGeometry.parameters.width / 2),
-        cube.scale.y / 2,
+        mesh.scale.y / 2,
         -(planeGeometry.parameters.height / 2)
       ),
       max: new Vector3(
         planeGeometry.parameters.width / 2,
-        cube.scale.y / 2,
+        mesh.scale.y / 2,
         planeGeometry.parameters.height / 2
       ),
     };
-    cube.userData.update = function () {
-      cube.position.clamp(cube.userData.limit.min, cube.userData.limit.max);
-      cube.scale.clampScalar(0.5, 3);
+    mesh.userData.update = function () {
+      mesh.position.clamp(mesh.userData.limit.min, mesh.userData.limit.max);
+      mesh.scale.clampScalar(0.5, 3);
     };
 
     // Transformation
     const transformControl = new TransformControls(
       globalCamera,
       labelRenderer.domElement,
-      cube
+      mesh
     );
     transformControl.addEventListener("dragging-changed", function (event) {
       cameraControls.enabled = !event.value;
@@ -177,7 +177,7 @@ const myHelpers = {
     transformControl.mode = "translate"; // rotate, scale, translate
     transformControl.enabled = transformControlsEnabled;
     transformControl.visible = transformControlsEnabled;
-    scene.add(cube);
+    scene.add(mesh);
     scene.add(transformControl);
 
     // GUI
@@ -185,11 +185,11 @@ const myHelpers = {
       "Position " + playerNumber
     );
     playerSubFolder.add(labelDiv, "textContent").name("name");
-    playerSubFolder.addColor(cube.material, "color");
+    playerSubFolder.addColor(mesh.material, "color");
     const help = {
       remove: function () {
-        cube.remove(playerName);
-        scene.remove(cube);
+        mesh.remove(playerName);
+        scene.remove(mesh);
         scene.remove(transformControl);
         playerSubFolder.destroy();
       },
@@ -197,12 +197,12 @@ const myHelpers = {
     playerSubFolder.add(help, "remove").name("remove");
 
     players.push({
-      mesh: cube,
+      mesh: mesh,
       transform: transformControl,
       label: playerName,
       gui: playerSubFolder,
     });
-    meshes.push(cube);
+    meshes.push(mesh);
   },
 
   topCamera: function () {
