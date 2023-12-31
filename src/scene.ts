@@ -22,6 +22,7 @@ import {
   WebGLRenderer,
   BackSide,
   MeshPhongMaterial,
+  CylinderGeometry,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import {
@@ -35,6 +36,7 @@ import { TransformControls } from "./helpers/TransformControls";
 import { PointerLockControls } from "./helpers/PointerLockControls";
 import { t } from "./locales/locales";
 
+let debug = false;
 const CANVAS_ID = "scene";
 
 let delta = 1 / 30;
@@ -84,6 +86,7 @@ let gui: GUI;
 let guiPlayersFolder: any;
 
 const myHelpers = {
+  playerType: "cube",
   togglePlayerNames: function () {
     activeCamera.layers.toggle(1);
   },
@@ -121,12 +124,24 @@ const myHelpers = {
     playerName.layers.set(1);
 
     // Geometry
-    const sideLength = 1;
-    const cubeGeometry = new BoxGeometry(sideLength, sideLength, sideLength);
+
+    let geometry;
+    switch (myHelpers.playerType) {
+      case "cube":
+        geometry = new BoxGeometry(1, 1, 1);
+        break;
+      case "cylinder":
+        geometry = new CylinderGeometry(0.5, 0.5, 1, 32);
+        break;
+      default:
+        geometry = new BoxGeometry(1, 1, 1);
+        break;
+    }
+
     const cubeMaterial = new MeshStandardMaterial({
       color: "#f69f1f",
     });
-    const cube = new Mesh(cubeGeometry, cubeMaterial);
+    const cube = new Mesh(geometry, cubeMaterial);
 
     cube.castShadow = true;
     cube.position.y = sideLength / 2;
@@ -404,30 +419,38 @@ function init() {
           }
         }
       }
+      if (keyCode == 191) {
+        // ?
+        debug = !debug;
+      }
     }
   }
 
   // ===== 🪄 HELPERS =====
   {
-    axesHelper = new AxesHelper(4);
-    axesHelper.visible = false;
-    scene.add(axesHelper);
+    if (debug) {
+      axesHelper = new AxesHelper(4);
+      axesHelper.visible = false;
+      scene.add(axesHelper);
 
-    pointLightHelper = new PointLightHelper(pointLight, undefined, "orange");
-    pointLightHelper.visible = false;
-    scene.add(pointLightHelper);
+      pointLightHelper = new PointLightHelper(pointLight, undefined, "orange");
+      pointLightHelper.visible = false;
+      scene.add(pointLightHelper);
 
-    gridHelper = new GridHelper(20, 20, "teal", "darkgray");
-    gridHelper.position.y = -0.01;
-    gridHelper.visible = true;
-    scene.add(gridHelper);
+      gridHelper = new GridHelper(20, 20, "teal", "darkgray");
+      gridHelper.position.y = -0.01;
+      gridHelper.visible = true;
+      scene.add(gridHelper);
+    }
   }
 
   // ===== 📈 STATS & CLOCK =====
   {
     clock = new Clock();
-    stats = new Stats();
-    document.body.appendChild(stats.dom);
+    if (debug) {
+      stats = new Stats();
+      document.body.appendChild(stats.dom);
+    }
   }
 
   // ==== 🐞 DEBUG GUI ====
@@ -436,6 +459,9 @@ function init() {
 
     guiPlayersFolder = gui.addFolder("Positions");
     guiPlayersFolder.add(myHelpers, "togglePlayerNames").name("Toggle Names");
+    guiPlayersFolder
+      .add(myHelpers, "playerType", ["cube", "cylinder"])
+      .name("Player Type");
     guiPlayersFolder.add(myHelpers, "addPlayer").name("Add Position");
 
     const cameraFolder = gui.addFolder("Camera");
@@ -453,15 +479,16 @@ function init() {
       .add(myHelpers, "toggleTransform")
       .name("Toggle Transformation");
 
-    const lightsFolder = gui.addFolder("Lights");
-    lightsFolder.add(pointLight, "visible").name("point light");
-    lightsFolder.add(ambientLight, "visible").name("ambient light");
+    if (debug) {
+      const lightsFolder = gui.addFolder("Lights");
+      lightsFolder.add(pointLight, "visible").name("point light");
+      lightsFolder.add(ambientLight, "visible").name("ambient light");
 
-    const helpersFolder = gui.addFolder("Helpers");
-    helpersFolder.add(gridHelper, "visible").name("grid");
-    helpersFolder.add(axesHelper, "visible").name("axes");
-    helpersFolder.add(pointLightHelper, "visible").name("pointLight");
-
+      const helpersFolder = gui.addFolder("Helpers");
+      helpersFolder.add(gridHelper, "visible").name("grid");
+      helpersFolder.add(axesHelper, "visible").name("axes");
+      helpersFolder.add(pointLightHelper, "visible").name("pointLight");
+    }
     // persist GUI state in local storage on changes
     gui.onFinishChange(() => {
       const guiState = gui.save();
@@ -491,7 +518,9 @@ function animate() {
   if (delta > interval) {
     // The draw or time dependent code are here
 
-    stats.update();
+    if (debug) {
+      stats.update();
+    }
 
     players.forEach((player) => {
       player.mesh.userData.limit = {
@@ -508,11 +537,6 @@ function animate() {
       };
       player.mesh.userData.update();
     });
-
-    /*if (animation.enabled && animation.play) {
-      animations.rotate(cube, clock, Math.PI / 3);
-      animations.bounce(cube, clock, 1, 0.5, 0.5);
-    }*/
 
     if (resizeRendererToDisplaySize(renderer)) {
       const canvas = renderer.domElement;

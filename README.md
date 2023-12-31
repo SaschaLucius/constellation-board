@@ -8,6 +8,8 @@
 - Translations
     - Ger and Eng
 - Short explanation on beginning (V)
+- Positions
+    - Multiple Mesh types (V)
 - Textures for
     - world: start with sphere before modelling something (V)
         - https://blog.mastermaps.com/2014/01/photo-spheres-with-threejs.html
