@@ -39,7 +39,11 @@ import sphereMaterial from "/Stenbocki_maja.jpg?url";
 import planeMaterials from "/wood/BaseColor.png?url";
 import planeNormals from "/wood/Normal.png?url";
 
-let debug = false;
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const debugMode = urlParams.get("debug");
+let debug = debugMode ? debugMode === "true" : false;
+
 const CANVAS_ID = "scene";
 
 let delta = 1 / 30;

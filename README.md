@@ -23,9 +23,9 @@
     - Fix scaling of elements
     - find better color scheme
     - move hidden and in size of the element
-- Debug Mode
+- Debug Mode (V)
     - disable by default
-    - enable by build variant
+    - enable by URL parameter `debug=true`
 - Multi Participant
     - Start with sharable state vis URL
     - implement a socket backend to sync
