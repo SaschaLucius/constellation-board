@@ -560,7 +560,7 @@ function init() {
     function onMouseDown(event) {
       event.preventDefault();
       var rightclick;
-      if (!event) var event = window.event;
+      if (!event) var event: any = window.event;
       if (event.which) rightclick = event.which == 3;
       else if (event.button) rightclick = event.button == 2;
       if (!rightclick) return;
@@ -580,20 +580,6 @@ function init() {
     }
     window.addEventListener("mousedown", onMouseDown, false);
 
-    if (document.addEventListener) {
-      document.addEventListener(
-        "contextmenu",
-        function (e) {
-          e.preventDefault();
-        },
-        false
-      );
-    } else {
-      document.attachEvent("oncontextmenu", function () {
-        window.event.returnValue = false;
-      });
-    }
-
     function addClickListenerById(id, listener) {
       var element = document.getElementById(id);
       if (element) {
@@ -605,11 +591,11 @@ function init() {
       }
     }
 
-    addClickListenerById("menuChangeColor", (e) => {
+    addClickListenerById("menuChangeColor", () => {
       intersect.material.color.setHex(Math.random() * 0x777777 + 0x777777);
     });
 
-    addClickListenerById("menuDelete", (e) => {
+    addClickListenerById("menuDelete", () => {
       players
         .filter((player) => player.mesh.id === intersect.id)
         .forEach((p) => {
