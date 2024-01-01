@@ -23,6 +23,8 @@ import {
   BackSide,
   MeshPhongMaterial,
   CylinderGeometry,
+  CapsuleGeometry,
+  ConeGeometry,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import {
@@ -134,11 +136,23 @@ const myHelpers = {
 
     let geometry;
     switch (myHelpers.playerType) {
-      case "cube":
+      case "box":
         geometry = new BoxGeometry(1, 1, 1);
+        break;
+      case "capsule":
+        geometry = new CapsuleGeometry(0.5, 0.5, 4, 8);
         break;
       case "cylinder":
         geometry = new CylinderGeometry(0.5, 0.5, 1, 32);
+        break;
+      case "cone":
+        geometry = new ConeGeometry(0.5, 1, 32);
+        break;
+      case "sphere":
+        geometry = new SphereGeometry(0.5, 32, 32);
+        break;
+      case "pentagon":
+        geometry = new CylinderGeometry(0.5, 0.5, 1, 5);
         break;
       default:
         geometry = new BoxGeometry(1, 1, 1);
@@ -472,9 +486,20 @@ function init() {
 
     guiPlayersFolder = gui.addFolder("Positions");
     guiPlayersFolder
-      .add(myHelpers, "playerType", ["cube", "cylinder"])
-      .name("Def. Pos. Type");
+      .add(myHelpers, "playerType", [
+        "box",
+        "capsule",
+        "cylinder",
+        "cone",
+        "sphere",
+        "pentagon",
+      ])
+      .name("Def. Pos. Shape");
+
     guiPlayersFolder.add(myHelpers, "togglePlayerNames").name("Toggle Names");
+    guiPlayersFolder
+      .add(myHelpers, "toggleTransform")
+      .name("Toggle Transformation");
 
     const cameraFolder = gui.addFolder("Camera");
 
@@ -485,11 +510,6 @@ function init() {
     environmentFolder.add(plane.scale, "x").name("Board Width");
     environmentFolder.add(plane.scale, "y").name("Board Height");
     environmentFolder.add(sphere, "visible").name("Room");
-
-    const controlsFolder = gui.addFolder("Controls");
-    controlsFolder
-      .add(myHelpers, "toggleTransform")
-      .name("Toggle Transformation");
 
     if (debug) {
       const lightsFolder = gui.addFolder("Lights");
