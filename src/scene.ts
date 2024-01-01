@@ -178,6 +178,7 @@ const myHelpers = {
       labelRenderer.domElement,
       mesh
     );
+    //transformControl.setSize(0.5);
     transformControl.addEventListener("dragging-changed", function (event) {
       cameraControls.enabled = !event.value;
     });
@@ -462,14 +463,18 @@ function init() {
 
   // ==== 🐞 DEBUG GUI ====
   {
-    gui = new GUI({ title: "Menu", width: 300 });
+    gui = new GUI({
+      title: "Menu",
+      width: Math.min(300, canvas.clientWidth / 2),
+      closeFolders: true,
+    });
+    gui.add(myHelpers, "addPlayer").name("Add Position");
 
     guiPlayersFolder = gui.addFolder("Positions");
-    guiPlayersFolder.add(myHelpers, "togglePlayerNames").name("Toggle Names");
     guiPlayersFolder
       .add(myHelpers, "playerType", ["cube", "cylinder"])
-      .name("Player Type");
-    guiPlayersFolder.add(myHelpers, "addPlayer").name("Add Position");
+      .name("Def. Pos. Type");
+    guiPlayersFolder.add(myHelpers, "togglePlayerNames").name("Toggle Names");
 
     const cameraFolder = gui.addFolder("Camera");
 

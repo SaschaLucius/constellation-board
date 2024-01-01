@@ -640,29 +640,20 @@ class TransformControlsGizmo extends Object3D {
     }
 
     // Gizmo definitions - custom hierarchy definitions for setupGizmo() function
-
-    const yMove = -0.375 * object.geometry.parameters.height;
+    const yMove = -object.position.y;
 
     const gizmoTranslate = {
       XZ: [
         [
-          new Mesh(
-            new BoxGeometry(0.15, 0.15, 0.01),
-            matGreenTransparent.clone()
-          ),
+          new Mesh(new OctahedronGeometry(0.1, 0), matGreenTransparent.clone()),
           [0, yMove, 0],
-          [-Math.PI / 2, 0, 0],
         ],
       ],
     };
 
     const pickerTranslate = {
       XZ: [
-        [
-          new Mesh(new BoxGeometry(0.2, 0.2, 0.01), matInvisible),
-          [0, yMove, 0],
-          [-Math.PI / 2, 0, 0],
-        ],
+        [new Mesh(new OctahedronGeometry(0.2, 0), matInvisible), [0, yMove, 0]],
       ],
     };
 
@@ -946,7 +937,6 @@ class TransformControlsPlane extends Mesh {
 
     _alignVector.copy(_v2);
 
-    //console.log(this.mode, this.axis);
     switch (this.mode) {
       case "translate":
       case "scale":
