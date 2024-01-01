@@ -25,6 +25,7 @@ import {
   CylinderGeometry,
   CapsuleGeometry,
   ConeGeometry,
+  Vector2,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import {
@@ -536,9 +537,88 @@ function init() {
       localStorage.removeItem("guiState");
       gui.reset();
     };
-    gui.add({ resetGui }, "resetGui").name("RESET");
-
+    gui.add({ resetGui }, "resetGui").name("RESET GUI");
     gui.close();
+  }
+
+  // right click menu
+  {
+    var mouse = new Vector2();
+    var raycaster = new Raycaster();
+    var intersect;
+    var rect = renderer.domElement.getBoundingClientRect();
+
+    var menu = document.getElementById("menu");
+
+    function onDocumentMouseMove(event) {
+      event.preventDefault();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    }
+    window.addEventListener("mousemove", onDocumentMouseMove, false);
+
+    function onMouseDown(event) {
+      event.preventDefault();
+      var rightclick;
+      if (!event) var event = window.event;
+      if (event.which) rightclick = event.which == 3;
+      else if (event.button) rightclick = event.button == 2;
+      if (!rightclick) return;
+
+      raycaster.setFromCamera(mouse, activeCamera);
+
+      var intersects = raycaster.intersectObjects(meshes);
+
+      if (intersects.length) {
+        intersect = intersects[0].object;
+        menu.style.left = event.clientX - rect.left + "px";
+        menu.style.top = event.clientY - rect.top + "px";
+        menu.style.display = "";
+      } else {
+        intersect = undefined;
+      }
+    }
+    window.addEventListener("mousedown", onMouseDown, false);
+
+    if (document.addEventListener) {
+      document.addEventListener(
+        "contextmenu",
+        function (e) {
+          e.preventDefault();
+        },
+        false
+      );
+    } else {
+      document.attachEvent("oncontextmenu", function () {
+        window.event.returnValue = false;
+      });
+    }
+
+    function addClickListenerById(id, listener) {
+      var element = document.getElementById(id);
+      if (element) {
+        console.log("adding listener to " + id);
+        element.addEventListener("click", (e) => {
+          listener(e);
+          menu.style.display = "none";
+        });
+      }
+    }
+
+    addClickListenerById("menuChangeColor", (e) => {
+      intersect.material.color.setHex(Math.random() * 0x777777 + 0x777777);
+    });
+
+    addClickListenerById("menuDelete", (e) => {
+      players
+        .filter((player) => player.mesh.id === intersect.id)
+        .forEach((p) => {
+          p.mesh.remove(p.label);
+          scene.remove(p.mesh);
+          scene.remove(p.transform);
+          p.gui.destroy();
+        });
+    });
   }
 }
 

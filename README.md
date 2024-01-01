@@ -28,4 +28,4 @@
     - enable by URL parameter `debug=true`
 - Multi Participant
     - Start with sharable state vis URL
-    - implement a socket backend to sync
+    - implement a socket backend to sync https://sbcode.net/threejs/socketio-setup/
