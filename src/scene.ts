@@ -406,7 +406,7 @@ function init() {
     cameraControls.target = new Vector3();
     cameraControls.enableDamping = true;
     cameraControls.autoRotate = false;
-    cameraControls.maxPolarAngle = Math.PI / 2;
+    cameraControls.maxPolarAngle = Math.PI / 2.05;
     cameraControls.minDistance = 0;
     cameraControls.maxDistance = 120;
     cameraControls.enabled = false;
