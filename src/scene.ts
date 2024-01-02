@@ -211,10 +211,15 @@ const myHelpers = {
     playerSubFolder.addColor(mesh.material, "color");
     const help = {
       remove: function () {
-        mesh.remove(playerName);
-        scene.remove(mesh);
-        scene.remove(transformControl);
         playerSubFolder.destroy();
+        mesh.remove(playerName);
+        scene.remove(transformControl);
+        scene.remove(mesh);
+
+        let index = players.findIndex((player) => player.mesh.id === mesh.id);
+
+        players.splice(index, 1);
+        meshes.splice(index, 1);
       },
     };
     playerSubFolder.add(help, "remove").name("remove");
@@ -596,14 +601,19 @@ function init() {
     });
 
     addClickListenerById("menuDelete", () => {
-      players
-        .filter((player) => player.mesh.id === intersect.id)
-        .forEach((p) => {
-          p.mesh.remove(p.label);
-          scene.remove(p.mesh);
-          scene.remove(p.transform);
-          p.gui.destroy();
-        });
+      let index = players.findIndex(
+        (player) => player.mesh.id === intersect.id
+      );
+
+      let currentPlayer = players[index];
+
+      currentPlayer.gui.destroy();
+      currentPlayer.mesh.remove(currentPlayer.label);
+      scene.remove(currentPlayer.transform);
+      scene.remove(currentPlayer.mesh);
+
+      players.splice(index, 1);
+      meshes.splice(index, 1);
     });
   }
 }
