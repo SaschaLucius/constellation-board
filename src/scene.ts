@@ -556,14 +556,12 @@ function init() {
     var menu = document.getElementById("menu");
 
     function onDocumentMouseMove(event) {
-      event.preventDefault();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     }
     window.addEventListener("mousemove", onDocumentMouseMove, false);
 
     function onMouseDown(event) {
-      event.preventDefault();
       var rightclick;
       if (!event) var event: any = window.event;
       if (event.which) rightclick = event.which == 3;
@@ -579,6 +577,7 @@ function init() {
         menu.style.left = event.clientX - rect.left + "px";
         menu.style.top = event.clientY - rect.top + "px";
         menu.style.display = "";
+        event.preventDefault();
       } else {
         intersect = undefined;
       }
