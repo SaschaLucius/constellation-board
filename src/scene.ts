@@ -335,9 +335,10 @@ function init() {
 
   // ===== 💡 LIGHTS =====
   {
-    ambientLight = new AmbientLight("white", 0.4);
-    pointLight = new PointLight("#ffdca8", 1.2, 100);
-    pointLight.position.set(-2, 3, 3);
+    ambientLight = new AmbientLight("white", 1);
+
+    pointLight = new PointLight("white", 80, 100);
+    pointLight.position.set(0, 5, 0);
     pointLight.castShadow = true;
     pointLight.shadow.radius = 4;
     pointLight.shadow.camera.near = 0.5;
