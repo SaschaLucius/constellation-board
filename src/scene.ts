@@ -648,7 +648,6 @@ function init() {
     function addClickListenerById(id, listener) {
       var element = document.getElementById(id);
       if (element) {
-        console.log("adding listener to " + id);
         element.addEventListener("click", (e) => {
           listener(e);
           menu.style.display = "none";
