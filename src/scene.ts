@@ -38,9 +38,11 @@ import "./style.css";
 import { TransformControls } from "./helpers/TransformControls";
 import { PointerLockControls } from "./helpers/PointerLockControls";
 import { t } from "./locales/locales";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import sphereMaterial from "/Stenbocki_maja.jpg?url";
 import planeMaterials from "/wood/BaseColor.png?url";
 import planeNormals from "/wood/Normal.png?url";
+const loader = new GLTFLoader();
 
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
@@ -136,6 +138,7 @@ const myHelpers = {
     // Geometry
 
     let geometry;
+    let mesh;
     switch (myHelpers.playerType) {
       case "box":
         geometry = new BoxGeometry(1, 1, 1);
@@ -155,82 +158,63 @@ const myHelpers = {
       case "pentagon":
         geometry = new CylinderGeometry(0.5, 0.5, 1, 5);
         break;
+      case "gltf":
+        loader.load(
+          "models/Boar.glb",
+          function (gltf) {
+            mesh = gltf.scene; // fallback
+
+            gltf.scene.traverse(function (child) {
+              if (child instanceof Mesh) {
+                mesh.castShadow = true;
+                child.updateMatrixWorld(true);
+                mesh = child;
+              }
+            });
+
+            newFunction(mesh, playerNumber, labelDiv, playerName);
+          },
+          undefined,
+          function (error) {
+            console.error(error);
+          }
+        );
+        break;
       default:
         geometry = new BoxGeometry(1, 1, 1);
         break;
     }
 
-    const cubeMaterial = new MeshStandardMaterial({
-      color: "#f69f1f",
-    });
-    const mesh = new Mesh(geometry, cubeMaterial);
+    if (myHelpers.playerType !== "gltf") {
+      const cubeMaterial = new MeshStandardMaterial({
+        color: "#f69f1f",
+      });
+      geometry.translate(0, 0.5, 0);
+      mesh = new Mesh(geometry, cubeMaterial);
 
-    mesh.castShadow = true;
-    mesh.position.y = 1 / 2;
-    mesh.add(playerName);
+      mesh.castShadow = true;
 
-    // Limit
-    mesh.userData.limit = {
-      min: new Vector3(
-        -(planeGeometry.parameters.width / 2),
-        mesh.scale.y / 2,
-        -(planeGeometry.parameters.height / 2)
-      ),
-      max: new Vector3(
-        planeGeometry.parameters.width / 2,
-        mesh.scale.y / 2,
-        planeGeometry.parameters.height / 2
-      ),
-    };
-    mesh.userData.update = function () {
-      mesh.position.clamp(mesh.userData.limit.min, mesh.userData.limit.max);
-      mesh.scale.clampScalar(0.5, 3);
-    };
+      mesh.add(playerName);
 
-    // Transformation
-    const transformControl = new TransformControls(
-      globalCamera,
-      labelRenderer.domElement,
-      mesh
-    );
-    //transformControl.setSize(0.5);
-    transformControl.addEventListener("dragging-changed", function (event) {
-      cameraControls.enabled = !event.value;
-    });
-    transformControl.mode = "translate"; // rotate, scale, translate
-    transformControl.enabled = transformControlsEnabled;
-    transformControl.visible = transformControlsEnabled;
-    scene.add(mesh);
-    scene.add(transformControl);
-
-    // GUI
-    const playerSubFolder = guiPlayersFolder.addFolder(
-      "Position " + playerNumber
-    );
-    playerSubFolder.add(labelDiv, "textContent").name("name");
-    playerSubFolder.addColor(mesh.material, "color");
-    const help = {
-      remove: function () {
-        playerSubFolder.destroy();
-        mesh.remove(playerName);
-        scene.remove(transformControl);
-        scene.remove(mesh);
-
-        let index = players.findIndex((player) => player.mesh.id === mesh.id);
-
-        players.splice(index, 1);
-        meshes.splice(index, 1);
-      },
-    };
-    playerSubFolder.add(help, "remove").name("remove");
-
-    players.push({
-      mesh: mesh,
-      transform: transformControl,
-      label: playerName,
-      gui: playerSubFolder,
-    });
-    meshes.push(mesh);
+      // Limit
+      mesh.userData.limit = {
+        min: new Vector3(
+          -(planeGeometry.parameters.width / 2),
+          mesh.scale.y / 2,
+          -(planeGeometry.parameters.height / 2)
+        ),
+        max: new Vector3(
+          planeGeometry.parameters.width / 2,
+          mesh.scale.y / 2,
+          planeGeometry.parameters.height / 2
+        ),
+      };
+      mesh.userData.update = function () {
+        mesh.position.clamp(mesh.userData.limit.min, mesh.userData.limit.max);
+        mesh.scale.clampScalar(0.5, 3);
+      };
+      newFunction(mesh, playerNumber, labelDiv, playerName);
+    }
   },
 
   topCamera: function () {
@@ -240,6 +224,77 @@ const myHelpers = {
     cameraControls.update();
   },
 };
+
+function newFunction(
+  mesh: any,
+  playerNumber: number,
+  labelDiv: HTMLDivElement,
+  playerName: CSS2DObject
+) {
+  const transformControl = new TransformControls(
+    globalCamera,
+    labelRenderer.domElement,
+    mesh
+  );
+  //transformControl.setSize(0.5);
+  transformControl.addEventListener("dragging-changed", function (event) {
+    cameraControls.enabled = !event.value;
+  });
+  transformControl.mode = "translate"; // rotate, scale, translate
+  transformControl.enabled = transformControlsEnabled;
+  transformControl.visible = transformControlsEnabled;
+  mesh.userData.limit = {
+    min: new Vector3(
+      -(planeGeometry.parameters.width / 2),
+      0,
+      -(planeGeometry.parameters.height / 2)
+    ),
+    max: new Vector3(
+      planeGeometry.parameters.width / 2,
+      0,
+      planeGeometry.parameters.height / 2
+    ),
+  };
+  mesh.userData.update = function () {
+    mesh.position.clamp(mesh.userData.limit.min, mesh.userData.limit.max);
+    mesh.scale.clampScalar(0.001, 3);
+  };
+
+  scene.add(mesh);
+  scene.add(transformControl);
+
+  // GUI
+  const playerSubFolder = guiPlayersFolder.addFolder(
+    "Position " + playerNumber
+  );
+  playerSubFolder.add(labelDiv, "textContent").name("name");
+  if (myHelpers.playerType !== "gltf") {
+    playerSubFolder.addColor(mesh.material, "color");
+  }
+
+  const help = {
+    remove: function () {
+      playerSubFolder.destroy();
+      mesh.remove(playerName);
+      scene.remove(transformControl);
+      scene.remove(mesh);
+
+      let index = players.findIndex((player) => player.mesh.id === mesh.id);
+
+      players.splice(index, 1);
+      meshes.splice(index, 1);
+    },
+  };
+  playerSubFolder.add(help, "remove").name("remove");
+
+  players.push({
+    mesh: mesh,
+    transform: transformControl,
+    label: playerName,
+    gui: playerSubFolder,
+  });
+  meshes.push(mesh);
+}
 
 function onDblClick(event: any) {
   let x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -263,7 +318,11 @@ function onDblClick(event: any) {
     }
 
     const position = intersects[0].object.position;
-    playerCamera.position.set(position.x, position.y, position.z);
+    playerCamera.position.set(
+      position.x,
+      1 * intersects[0].object.scale.y,
+      position.z
+    );
     const rotation = intersects[0].object.rotation;
     playerCamera.rotation.set(rotation.x, rotation.y, rotation.z);
     activeCamera = playerCamera;
@@ -500,6 +559,7 @@ function init() {
         "cone",
         "sphere",
         "pentagon",
+        "gltf",
       ])
       .name("Def. Pos. Shape");
 
@@ -632,16 +692,8 @@ function animate() {
 
     players.forEach((player) => {
       player.mesh.userData.limit = {
-        min: new Vector3(
-          -(plane.scale.x / 2),
-          player.mesh.scale.y / 2,
-          -(plane.scale.y / 2)
-        ),
-        max: new Vector3(
-          plane.scale.x / 2,
-          player.mesh.scale.y / 2,
-          plane.scale.y / 2
-        ),
+        min: new Vector3(-(plane.scale.x / 2), 0, -(plane.scale.y / 2)),
+        max: new Vector3(plane.scale.x / 2, 0, plane.scale.y / 2),
       };
       player.mesh.userData.update();
     });

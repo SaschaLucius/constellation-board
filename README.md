@@ -75,3 +75,6 @@ http://www.lpscocoon.de/html/die_innovation_2008.php
 - Multi Participant
     - Start with sharable state vis URL
     - implement a socket backend to sync https://sbcode.net/threejs/socketio-setup/
+- Inner Team
+    - https://poly.pizza/ CC0 Models
+        - models got cleaned up in size to contain just the mesh (no animation no rigging)

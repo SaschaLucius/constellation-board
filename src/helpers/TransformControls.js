@@ -640,7 +640,7 @@ class TransformControlsGizmo extends Object3D {
     }
 
     // Gizmo definitions - custom hierarchy definitions for setupGizmo() function
-    const yMove = -object.position.y;
+    const yMove = object?.position?.y ? -object.position.y : 0;
 
     const gizmoTranslate = {
       XZ: [
