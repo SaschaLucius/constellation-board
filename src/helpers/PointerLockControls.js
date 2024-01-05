@@ -128,7 +128,6 @@ function onMouseMove(event) {
     Math.min(_PI_2 - this.minPolarAngleX, _euler.x)
   );
 
-  console.log(-this.maxAngleY, _euler.y, this.maxAngleY);
   _euler.y = Math.max(-this.maxAngleY, Math.min(this.maxAngleY, _euler.y));
 
   camera.quaternion.setFromEuler(_euler);
