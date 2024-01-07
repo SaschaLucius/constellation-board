@@ -482,17 +482,14 @@ function init() {
     globalControls.update();
 
     playerControls = new OrbitControls(playerCamera, labelRenderer.domElement);
+    playerControls.enableZoom = false;
     playerControls.target = new Vector3();
     playerControls.enabled = false;
+    playerControls.maxPolarAngle = Math.PI / 1.1; // don't overstretch head
+    playerControls.minPolarAngle = 0.8; // don't look at feet
+    playerControls.maxAzimuthAngle = Math.PI / 1.8; // max look over shoulder left
+    playerControls.minAzimuthAngle = -Math.PI / 1.8; // max look over shoulder right
     playerControls.update();
-
-    /*.maxAzimuthAngle // How far you can orbit horizontally
-    .minAzimuthAngle
-
-    .maxPolarAngle // How far you can orbit vertically
-    .minPolarAngle
-    .maxZoom
-    .minZoom*/
 
     window.addEventListener("dblclick", onDblClick, false);
 
