@@ -48,7 +48,7 @@ http://www.lpscocoon.de/html/die_innovation_2008.php
 
 ### TODO
 
-- PointerLockControl
+- FPV (V)
     - touch support (replace with orbit and no zoom controls?)
     - look and ESC
 - Translations

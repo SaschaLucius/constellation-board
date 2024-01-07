@@ -36,7 +36,6 @@ import Stats from "three/examples/jsm/libs/stats.module";
 import { resizeRendererToDisplaySize } from "./helpers/responsiveness";
 import "./style.css";
 import { TransformControls } from "./helpers/TransformControls";
-import { PointerLockControls } from "./helpers/PointerLockControls";
 import { t } from "./locales/locales";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import sphereMaterial from "/Stenbocki_maja.jpg?url";
@@ -68,9 +67,9 @@ let pointLight: PointLight;
 let pointLightHelper: PointLightHelper;
 
 let globalCamera: PerspectiveCamera;
-let cameraControls: OrbitControls;
+let globalControls: OrbitControls;
 let playerCamera: PerspectiveCamera;
-let pointerControls: PointerLockControls;
+let playerControls: OrbitControls;
 let activeCamera: PerspectiveCamera;
 
 let planeGeometry: PlaneGeometry;
@@ -220,8 +219,8 @@ const myHelpers = {
   topCamera: function () {
     activeCamera = globalCamera;
     globalCamera.position.set(0, 11, 0);
-    cameraControls.target = new Vector3();
-    cameraControls.update();
+    globalControls.target = new Vector3();
+    globalControls.update();
   },
 };
 
@@ -238,7 +237,7 @@ function newFunction(
   );
   //transformControl.setSize(0.5);
   transformControl.addEventListener("dragging-changed", function (event) {
-    cameraControls.enabled = !event.value;
+    globalControls.enabled = !event.value;
   });
   transformControl.mode = "translate"; // rotate, scale, translate
   transformControl.enabled = transformControlsEnabled;
@@ -299,12 +298,12 @@ function newFunction(
 function onDblClick(event: any) {
   let x = (event.clientX / window.innerWidth) * 2 - 1;
   let y = -(event.clientY / window.innerHeight) * 2 + 1;
-  let dir = new Vector3(x, y, -1);
-  dir.unproject(globalCamera);
+  let direction = new Vector3(x, y, -1);
+  direction.unproject(globalCamera);
 
   let ray = new Raycaster(
     globalCamera.position,
-    dir.sub(globalCamera.position).normalize()
+    direction.sub(globalCamera.position).normalize()
   );
   var intersects = ray.intersectObjects(players.map((p) => p.mesh));
   if (intersects.length > 0) {
@@ -317,17 +316,27 @@ function onDblClick(event: any) {
         });
     }
 
-    const position = intersects[0].object.position;
-    playerCamera.position.set(
-      position.x,
+    const intersectPosition = intersects[0].object.position.clone();
+    const intersectRotation = intersects[0].object.rotation.clone();
+    const lookingDirectionVector = new Vector3(0, 0, -1)
+      .applyEuler(intersectRotation)
+      .multiplyScalar(0.1);
+    const cameraPosition = new Vector3(
+      intersectPosition.x,
       1 * intersects[0].object.scale.y,
-      position.z
+      intersectPosition.z
     );
-    const rotation = intersects[0].object.rotation;
-    playerCamera.rotation.set(rotation.x, rotation.y, rotation.z);
+    const cameraTarget = cameraPosition.clone().add(lookingDirectionVector);
+
+    playerCamera.position.copy(cameraPosition);
+    playerCamera.rotation.copy(intersectRotation);
+
+    playerControls.target.copy(cameraTarget);
+
+    globalControls.enabled = false;
+    playerControls.enabled = true;
     activeCamera = playerCamera;
-    cameraControls.enabled = false;
-    pointerControls.lock();
+    playerControls.update();
   }
 }
 
@@ -344,7 +353,7 @@ function handleInstructions() {
     if (instructions.style.display !== "none") {
       instructions.style.display = "none";
       blocker.style.display = "none";
-      cameraControls.enabled = true;
+      globalControls.enabled = true;
       window.removeEventListener("click", handleMouseDown, false);
     }
   };
@@ -462,26 +471,28 @@ function init() {
 
   // ===== 🕹️ CONTROLS =====
   {
-    cameraControls = new OrbitControls(globalCamera, labelRenderer.domElement);
-    cameraControls.target = new Vector3();
-    cameraControls.enableDamping = true;
-    cameraControls.autoRotate = false;
-    cameraControls.maxPolarAngle = Math.PI / 2.05;
-    cameraControls.minDistance = 0;
-    cameraControls.maxDistance = 120;
-    cameraControls.enabled = false;
-    cameraControls.update();
+    globalControls = new OrbitControls(globalCamera, labelRenderer.domElement);
+    globalControls.target = new Vector3();
+    globalControls.enableDamping = true;
+    globalControls.autoRotate = false;
+    globalControls.maxPolarAngle = Math.PI / 2.05;
+    globalControls.minDistance = 0;
+    globalControls.maxDistance = 120;
+    globalControls.enabled = false;
+    globalControls.update();
 
-    pointerControls = new PointerLockControls(
-      playerCamera,
-      labelRenderer.domElement
-    );
-    pointerControls.maxPolarAngleX = (Math.PI / 4) * 3;
-    pointerControls.minPolarAngleX = Math.PI / 4;
-    pointerControls.maxAngleY = Math.PI / 3;
-    pointerControls.pointerSpeed = 0.5;
+    playerControls = new OrbitControls(playerCamera, labelRenderer.domElement);
+    playerControls.target = new Vector3();
+    playerControls.enabled = false;
+    playerControls.update();
 
-    scene.add(pointerControls.getObject());
+    /*.maxAzimuthAngle // How far you can orbit horizontally
+    .minAzimuthAngle
+
+    .maxPolarAngle // How far you can orbit vertically
+    .minPolarAngle
+    .maxZoom
+    .minZoom*/
 
     window.addEventListener("dblclick", onDblClick, false);
 
@@ -491,11 +502,13 @@ function init() {
       if (keyCode == 27) {
         // ESC
         if (activeCamera === globalCamera) {
-          cameraControls.enabled = false;
+          globalControls.enabled = false;
+          playerControls.enabled = false;
           handleInstructions();
         } else {
           activeCamera = globalCamera;
-          cameraControls.enabled = true;
+          playerControls.enabled = false;
+          globalControls.enabled = true;
 
           if (transformControlsEnabled) {
             players
@@ -570,7 +583,7 @@ function init() {
 
     const cameraFolder = gui.addFolder("Camera");
 
-    cameraFolder.add(cameraControls, "autoRotate").name("Rotate");
+    cameraFolder.add(globalControls, "autoRotate").name("Rotate");
     cameraFolder.add(myHelpers, "topCamera").name("Top Down");
 
     const environmentFolder = gui.addFolder("Environment");
@@ -705,7 +718,8 @@ function animate() {
       labelRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
     }
 
-    cameraControls.update();
+    globalControls.update();
+    playerControls.update();
 
     labelRenderer.render(scene, activeCamera);
     renderer.render(scene, activeCamera);
