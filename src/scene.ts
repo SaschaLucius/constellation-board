@@ -520,10 +520,6 @@ function init() {
           }
         }
       }
-      if (keyCode == 191) {
-        // ?
-        debug = !debug;
-      }
     }
   }
 
