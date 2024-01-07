@@ -171,7 +171,7 @@ const myHelpers = {
               }
             });
 
-            newFunction(mesh, playerNumber, labelDiv, playerName);
+            addPlayerData(mesh, playerNumber, labelDiv, playerName);
           },
           undefined,
           function (error) {
@@ -212,7 +212,7 @@ const myHelpers = {
         mesh.position.clamp(mesh.userData.limit.min, mesh.userData.limit.max);
         mesh.scale.clampScalar(0.5, 3);
       };
-      newFunction(mesh, playerNumber, labelDiv, playerName);
+      addPlayerData(mesh, playerNumber, labelDiv, playerName);
     }
   },
 
@@ -224,7 +224,7 @@ const myHelpers = {
   },
 };
 
-function newFunction(
+function addPlayerData(
   mesh: any,
   playerNumber: number,
   labelDiv: HTMLDivElement,
@@ -501,24 +501,7 @@ function init() {
       var keyCode = event.which;
       if (keyCode == 27) {
         // ESC
-        if (activeCamera === globalCamera) {
-          globalControls.enabled = false;
-          playerControls.enabled = false;
-          handleInstructions();
-        } else {
-          activeCamera = globalCamera;
-          playerControls.enabled = false;
-          globalControls.enabled = true;
-
-          if (transformControlsEnabled) {
-            players
-              .map((player) => player.transform)
-              .forEach((transform) => {
-                transform.enabled = true;
-                transform.visible = true;
-              });
-          }
-        }
+        escFunction();
       }
     }
   }
@@ -683,6 +666,32 @@ function init() {
       players.splice(index, 1);
       meshes.splice(index, 1);
     });
+
+    var menu = document.getElementById("menu");
+    if (menu) {
+      menu.addEventListener("click", (e) => escFunction());
+    }
+  }
+}
+
+function escFunction() {
+  if (activeCamera === globalCamera) {
+    globalControls.enabled = false;
+    playerControls.enabled = false;
+    handleInstructions();
+  } else {
+    activeCamera = globalCamera;
+    playerControls.enabled = false;
+    globalControls.enabled = true;
+
+    if (transformControlsEnabled) {
+      players
+        .map((player) => player.transform)
+        .forEach((transform) => {
+          transform.enabled = true;
+          transform.visible = true;
+        });
+    }
   }
 }
 
