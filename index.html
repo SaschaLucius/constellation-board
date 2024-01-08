@@ -13,19 +13,33 @@
         background: rgba(0, 0, 0, 0.6);
       }
       .exit {
+        z-index: 10;
         position: absolute;
         top: 30px;
         left: 30px;
-        background: url(/quit.png) no-repeat;
-        background-size: 100% auto;
-        border-radius: 50px;
-        height: 85px;
-        width: 85px;
+        background-color: rgba(128, 128, 128, 0.5);
+        border: 2px solid rgb(0, 0, 0, 0.5);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-weight: bold;
+      }
+      .unselectable {
+        -moz-user-select: -moz-none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        -o-user-select: none;
+        user-select: none;
       }
     </style>
   </head>
   <body>
-    <div id="menu" class="exit" style="z-index: 10"></div>
+    <div id="quit" class="exit unselectable">Quit</div>
+
     <div
       id="menu"
       style="

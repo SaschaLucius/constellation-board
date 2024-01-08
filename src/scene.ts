@@ -664,7 +664,7 @@ function init() {
       meshes.splice(index, 1);
     });
 
-    var menu = document.getElementById("menu");
+    var menu = document.getElementById("quit");
     if (menu) {
       menu.addEventListener("click", (e) => escFunction());
     }
