@@ -489,6 +489,8 @@ function init() {
     playerControls.minPolarAngle = 0.8; // don't look at feet
     playerControls.maxAzimuthAngle = Math.PI / 1.8; // max look over shoulder left
     playerControls.minAzimuthAngle = -Math.PI / 1.8; // max look over shoulder right
+    playerControls.panSpeed = 0.3;
+    playerControls.enableDamping = true;
     playerControls.update();
 
     window.addEventListener("dblclick", onDblClick, false);
