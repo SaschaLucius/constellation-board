@@ -666,7 +666,7 @@ function init() {
 
     var menu = document.getElementById("quit");
     if (menu) {
-      menu.addEventListener("click", (e) => escFunction());
+      menu.addEventListener("click", () => escFunction());
     }
   }
 }
