@@ -726,9 +726,9 @@ function init() {
       meshes.splice(index, 1);
     });
 
-    var menu = document.getElementById("quit");
-    if (menu) {
-      menu.addEventListener("click", () => escFunction());
+    var quitButton = document.getElementById("quit");
+    if (quitButton) {
+      quitButton.addEventListener("click", () => escFunction());
     }
   }
 }
