@@ -26,6 +26,7 @@ import {
   CapsuleGeometry,
   ConeGeometry,
   Vector2,
+  DoubleSide,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import {
