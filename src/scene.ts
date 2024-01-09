@@ -311,9 +311,6 @@ function addPlayerData(
 }
 
 function onDblClick(event: any) {
-  const quit = document.getElementById("quit");
-  quit.style.display = "flex";
-
   let x = (event.clientX / window.innerWidth) * 2 - 1;
   let y = -(event.clientY / window.innerHeight) * 2 + 1;
   let direction = new Vector3(x, y, -1);
@@ -355,7 +352,13 @@ function onDblClick(event: any) {
     playerControls.enabled = true;
     activeCamera = playerCamera;
     playerControls.update();
+    enableQuitButton();
   }
+}
+
+function enableQuitButton() {
+  const quit = document.getElementById("quit");
+  quit.style.display = "flex";
 }
 
 function handleInstructions() {
@@ -730,16 +733,19 @@ function init() {
       meshes.splice(index, 1);
     });
 
-    var quitButton = document.getElementById("quit");
-    if (quitButton) {
-      quitButton.addEventListener("click", () => escFunction());
-    }
+    initQuitButton();
+  }
+}
+
+function initQuitButton() {
+  var quitButton = document.getElementById("quit");
+  if (quitButton) {
+    quitButton.addEventListener("click", () => escFunction());
   }
 }
 
 function escFunction() {
-  const quit = document.getElementById("quit");
-  quit.style.display = "none";
+  disableQuitButton();
 
   if (activeCamera === globalCamera) {
     globalControls.enabled = false;
@@ -759,6 +765,11 @@ function escFunction() {
         });
     }
   }
+}
+
+function disableQuitButton() {
+  const quit = document.getElementById("quit");
+  quit.style.display = "none";
 }
 
 function animate() {
