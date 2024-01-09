@@ -45,8 +45,8 @@ const loader = new GLTFLoader();
 
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-const debugMode = urlParams.get("debug");
-let debug = debugMode ? debugMode === "true" : false;
+const debug = urlParams.has("debug");
+const performance = urlParams.has("performance");
 
 const CANVAS_ID = "scene";
 
@@ -100,6 +100,9 @@ const myHelpers = {
   playerType: "cube",
   togglePlayerNames: function () {
     activeCamera.layers.toggle(1);
+    if (performance) {
+      render();
+    }
   },
 
   toggleTransform: function () {
@@ -119,6 +122,9 @@ const myHelpers = {
           transform.visible = true;
         });
       transformControlsEnabled = true;
+    }
+    if (performance) {
+      render();
     }
   },
 
@@ -242,6 +248,10 @@ function addPlayerData(
   transformControl.mode = "translate"; // rotate, scale, translate
   transformControl.enabled = transformControlsEnabled;
   transformControl.visible = transformControlsEnabled;
+  if (performance) {
+    transformControl.addEventListener("change", () => render());
+  }
+
   mesh.userData.limit = {
     min: new Vector3(
       -(planeGeometry.parameters.width / 2),
@@ -293,6 +303,10 @@ function addPlayerData(
     gui: playerSubFolder,
   });
   meshes.push(mesh);
+
+  if (performance) {
+    render();
+  }
 }
 
 function onDblClick(event: any) {
@@ -339,9 +353,6 @@ function onDblClick(event: any) {
     playerControls.update();
   }
 }
-
-init();
-animate();
 
 function handleInstructions() {
   const blocker = document.getElementById("blocker");
@@ -404,31 +415,43 @@ function init() {
   // ===== 💡 LIGHTS =====
   {
     ambientLight = new AmbientLight("white", 1);
-
-    pointLight = new PointLight("white", 80, 100);
-    pointLight.position.set(0, 5, 0);
-    pointLight.castShadow = true;
-    pointLight.shadow.radius = 4;
-    pointLight.shadow.camera.near = 0.5;
-    pointLight.shadow.camera.far = 4000;
-    pointLight.shadow.mapSize.width = 2048;
-    pointLight.shadow.mapSize.height = 2048;
     scene.add(ambientLight);
-    scene.add(pointLight);
+
+    if (!performance) {
+      pointLight = new PointLight("white", 80, 100);
+      pointLight.position.set(0, 5, 0);
+      pointLight.castShadow = true;
+      pointLight.shadow.radius = 4;
+      pointLight.shadow.camera.near = 0.5;
+      pointLight.shadow.camera.far = 4000;
+      pointLight.shadow.mapSize.width = 2048;
+      pointLight.shadow.mapSize.height = 2048;
+      scene.add(pointLight);
+    }
   }
 
   // ===== 📦 OBJECTS =====
   {
     planeGeometry = new PlaneGeometry(1, 1);
-    const planeTexture = new TextureLoader().load(planeMaterials);
-    const normalTexture = new TextureLoader().load(planeNormals);
+    let planeMaterial;
 
-    const planeMaterial = new MeshPhongMaterial({
-      map: planeTexture,
-      normalMap: normalTexture,
-      side: BackSide,
-    });
-    planeMaterial.normalScale.set(2, 2);
+    if (!performance) {
+      const planeTexture = new TextureLoader().load(planeMaterials);
+      const normalTexture = new TextureLoader().load(planeNormals);
+
+      planeMaterial = new MeshStandardMaterial({
+        map: planeTexture,
+        normalMap: normalTexture,
+        side: DoubleSide,
+      });
+      planeMaterial.normalScale.set(2, 2);
+    } else {
+      planeMaterial = new MeshPhongMaterial({
+        color: "burlywood",
+        side: DoubleSide,
+      });
+    }
+
     plane = new Mesh(planeGeometry, planeMaterial);
     plane.rotateX(Math.PI / 2);
     plane.receiveShadow = true;
@@ -473,13 +496,17 @@ function init() {
   {
     globalControls = new OrbitControls(globalCamera, labelRenderer.domElement);
     globalControls.target = new Vector3();
-    globalControls.enableDamping = true;
     globalControls.autoRotate = false;
     globalControls.maxPolarAngle = Math.PI / 2.05;
     globalControls.minDistance = 0;
     globalControls.maxDistance = 120;
     globalControls.enabled = false;
     globalControls.update();
+    if (performance) {
+      globalControls.addEventListener("change", () => render());
+    } else {
+      globalControls.enableDamping = true;
+    }
 
     playerControls = new OrbitControls(playerCamera, labelRenderer.domElement);
     playerControls.enableZoom = false;
@@ -490,8 +517,12 @@ function init() {
     playerControls.maxAzimuthAngle = Math.PI / 1.8; // max look over shoulder left
     playerControls.minAzimuthAngle = -Math.PI / 1.8; // max look over shoulder right
     playerControls.panSpeed = 0.3;
-    playerControls.enableDamping = true;
     playerControls.update();
+    if (performance) {
+      playerControls.addEventListener("change", () => render());
+    } else {
+      playerControls.enableDamping = true;
+    }
 
     window.addEventListener("dblclick", onDblClick, false);
 
@@ -512,9 +543,15 @@ function init() {
       axesHelper.visible = false;
       scene.add(axesHelper);
 
-      pointLightHelper = new PointLightHelper(pointLight, undefined, "orange");
-      pointLightHelper.visible = false;
-      scene.add(pointLightHelper);
+      if (!performance) {
+        pointLightHelper = new PointLightHelper(
+          pointLight,
+          undefined,
+          "orange",
+        );
+        pointLightHelper.visible = false;
+        scene.add(pointLightHelper);
+      }
 
       gridHelper = new GridHelper(20, 20, "teal", "darkgray");
       gridHelper.position.y = -0.01;
@@ -561,23 +598,46 @@ function init() {
 
     const cameraFolder = gui.addFolder("Camera");
 
-    cameraFolder.add(globalControls, "autoRotate").name("Rotate");
+    if (!performance) {
+      cameraFolder.add(globalControls, "autoRotate").name("Rotate");
+    }
     cameraFolder.add(myHelpers, "topCamera").name("Top Down");
 
     const environmentFolder = gui.addFolder("Environment");
     environmentFolder.add(plane.scale, "x").name("Board Width");
     environmentFolder.add(plane.scale, "y").name("Board Height");
-    environmentFolder.add(sphere, "visible").name("Room");
+    if (!performance) {
+      environmentFolder.add(sphere, "visible").name("Room");
+    }
+
+    environmentFolder.onFinishChange((event) => {
+      if (event.object === plane.scale) {
+        players.forEach((player) => {
+          player.mesh.userData.limit = {
+            min: new Vector3(-(plane.scale.x / 2), 0, -(plane.scale.y / 2)),
+            max: new Vector3(plane.scale.x / 2, 0, plane.scale.y / 2),
+          };
+          player.mesh.userData.update();
+        });
+        if (performance) {
+          render();
+        }
+      }
+    });
 
     if (debug) {
       const lightsFolder = gui.addFolder("Lights");
-      lightsFolder.add(pointLight, "visible").name("point light");
       lightsFolder.add(ambientLight, "visible").name("ambient light");
+      if (!performance) {
+        lightsFolder.add(pointLight, "visible").name("point light");
+      }
 
       const helpersFolder = gui.addFolder("Helpers");
       helpersFolder.add(gridHelper, "visible").name("grid");
       helpersFolder.add(axesHelper, "visible").name("axes");
-      helpersFolder.add(pointLightHelper, "visible").name("pointLight");
+      if (!performance) {
+        helpersFolder.add(pointLightHelper, "visible").name("pointLight");
+      }
     }
     // persist GUI state in local storage on changes
     gui.onFinishChange(() => {
@@ -702,32 +762,38 @@ function animate() {
   if (delta > interval) {
     // The draw or time dependent code are here
 
-    if (debug) {
-      stats.update();
-    }
-
     players.forEach((player) => {
-      player.mesh.userData.limit = {
-        min: new Vector3(-(plane.scale.x / 2), 0, -(plane.scale.y / 2)),
-        max: new Vector3(plane.scale.x / 2, 0, plane.scale.y / 2),
-      };
       player.mesh.userData.update();
     });
 
-    if (resizeRendererToDisplaySize(renderer)) {
-      const canvas = renderer.domElement;
-      activeCamera.aspect = canvas.clientWidth / canvas.clientHeight;
-      activeCamera.updateProjectionMatrix();
-      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-      labelRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    }
-
+    // dapting the camera to the scene
     globalControls.update();
     playerControls.update();
 
-    labelRenderer.render(scene, activeCamera);
-    renderer.render(scene, activeCamera);
-
     delta = delta % interval;
+
+    render();
   }
+}
+
+function render() {
+  if (debug) {
+    stats.update();
+  }
+  if (resizeRendererToDisplaySize(renderer)) {
+    const canvas = renderer.domElement;
+    activeCamera.aspect = canvas.clientWidth / canvas.clientHeight;
+    activeCamera.updateProjectionMatrix();
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    labelRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
+  }
+  labelRenderer.render(scene, activeCamera);
+  renderer.render(scene, activeCamera);
+}
+
+init();
+if (!performance) {
+  animate();
+} else {
+  render();
 }

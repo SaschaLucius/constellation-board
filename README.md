@@ -71,7 +71,9 @@ http://www.lpscocoon.de/html/die_innovation_2008.php
     - move hidden and in size of the element
 - Debug Mode (V)
     - disable by default
-    - enable by URL parameter `debug=true`
+    - enable by URL parameter `debug`
+- Performance Mode
+    - enable by URL parameter `performance`
 - Multi Participant
     - Start with sharable state vis URL
     - implement a socket backend to sync https://sbcode.net/threejs/socketio-setup/
