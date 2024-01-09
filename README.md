@@ -70,10 +70,9 @@ http://www.lpscocoon.de/html/die_innovation_2008.php
     - find better color scheme
     - move hidden and in size of the element
 - Debug Mode (V)
-    - disable by default
-    - enable by URL parameter `debug`
-- Performance Mode
-    - enable by URL parameter `performance`
+    - [Debug Mode](https://saschalucius.github.io/constellation-board/?debug)
+- Performance Mode (V)
+    - [Performance Mode](https://saschalucius.github.io/constellation-board/?performance)
 - Multi Participant
     - Start with sharable state vis URL
     - implement a socket backend to sync https://sbcode.net/threejs/socketio-setup/
