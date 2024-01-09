@@ -310,6 +310,9 @@ function addPlayerData(
 }
 
 function onDblClick(event: any) {
+  const quit = document.getElementById("quit");
+  quit.style.display = "flex";
+
   let x = (event.clientX / window.innerWidth) * 2 - 1;
   let y = -(event.clientY / window.innerHeight) * 2 + 1;
   let direction = new Vector3(x, y, -1);
@@ -734,6 +737,9 @@ function init() {
 }
 
 function escFunction() {
+  const quit = document.getElementById("quit");
+  quit.style.display = "none";
+
   if (activeCamera === globalCamera) {
     globalControls.enabled = false;
     playerControls.enabled = false;
