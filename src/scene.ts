@@ -353,6 +353,10 @@ function onDblClick(event: any) {
     activeCamera = playerCamera;
     playerControls.update();
     enableQuitButton();
+
+    if (performance) {
+      render();
+    }
   }
 }
 
